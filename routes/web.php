@@ -31,4 +31,10 @@ Route::get('/demo', function () {
     ]);
 });
 
+Route::get('/free-plan', function () {
+    return Inertia::render('Frontend/FreePlan/Index', [
+
+    ]);
+});
+
 require __DIR__.'/auth.php';

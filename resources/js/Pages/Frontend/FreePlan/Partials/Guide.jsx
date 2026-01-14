@@ -1,0 +1,153 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+
+// --- Icons ---
+const DownloadIcon = () => (
+    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+);
+const BookOpenIcon = () => (
+    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+);
+const WrenchIcon = () => (
+    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
+);
+const CalculatorIcon = () => (
+    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+);
+const LightbulbIcon = () => (
+    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+);
+
+export default function Guide() {
+    // Logic Handlers
+    const handlePlanClick = (plan) => console.log(plan);
+    const handleViewDemo = () => window.open("https://drive.google.com/drive/folders/13sF8KclZYTzlYc3v5SbcOyMsRDwV7RM_?usp=drive_link", "_blank");
+    const isProcessingPayment = false;
+
+    // Animations
+    const fadeInUp = {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.5 }
+    };
+
+    const staggerContainer = {
+        animate: { transition: { staggerChildren: 0.1 } }
+    };
+
+    return (
+        <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-white">
+            <div className="max-w-6xl mx-auto">
+                {/* Hero Section */}
+                <motion.div className="text-center mb-16" {...fadeInUp}>
+                    {/* Badge Replacement: span with rounded-full */}
+                    <span className="inline-flex items-center rounded-full mb-6 bg-blue-100 text-[#12b5e2] hover:bg-blue-100 text-lg px-6 py-2">
+                        DIY Tutorial Guide
+                    </span>
+
+                    <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight">
+                        Build Your Own <br />
+                        <span className="bg-clip-text text-[#12b5e2]">
+                            KeyTag Journal
+                        </span>
+                    </h1>
+
+                    <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-12">
+                        Master Google Sheets, learn complex formulas, and create your
+                        personalized productivity system with our comprehensive tutorial
+                        guide.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+                        {/* Primary Button Replacement */}
+                        <button
+                            onClick={() => handlePlanClick("free")}
+                            disabled={isProcessingPayment}
+                            className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r bg-[#12b5e2] text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                        >
+                            <DownloadIcon />
+                            {isProcessingPayment ? "Redirecting..." : "Get Tutorial Guide"}
+                        </button>
+
+                        {/* Outline Button Replacement */}
+                        <button
+                            onClick={handleViewDemo}
+                            className="inline-flex items-center justify-center rounded-lg border-2 border-gray-300 hover:border-blue-500 px-8 py-4 text-lg font-semibold bg-white text-gray-900"
+                        >
+                            <BookOpenIcon />
+                            View Sample
+                        </button>
+                    </div>
+                </motion.div>
+
+                {/* Features Cards */}
+                <motion.div
+                    className="grid grid-cols-1 md:grid-cols-3 gap-12"
+                    variants={staggerContainer}
+                    initial="initial"
+                    animate="animate"
+                >
+                    {/* Feature 1 */}
+                    <motion.div variants={fadeInUp}>
+                        {/* Card Replacement: div with rounded-2xl */}
+                        <div className="h-full bg-white rounded-2xl text-center p-8 border border-gray-200 hover:shadow-lg transition-all">
+                            <div className="pb-6">
+                                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-2xl flex items-center justify-center">
+                                    <WrenchIcon />
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                    Self made KeyTag Journal
+                                </h3>
+                            </div>
+                            <div>
+                                <p className="text-gray-600 leading-relaxed">
+                                    You will create the system by yourself using a Tutorial.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Feature 2 */}
+                    <motion.div variants={fadeInUp}>
+                        <div className="h-full bg-white rounded-2xl text-center p-8 border border-gray-200 hover:shadow-lg transition-all">
+                            <div className="pb-6">
+                                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center">
+                                    <CalculatorIcon />
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                    Exposure to Complex Sheet formula
+                                </h3>
+                            </div>
+                            <div>
+                                <p className="text-gray-600 leading-relaxed">
+                                    If you are not an expert in Google Sheets, you will gain new
+                                    learnings from several complex formulae.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Feature 3 */}
+                    <motion.div variants={fadeInUp}>
+                        <div className="h-full bg-white rounded-2xl text-center p-8 border border-gray-200 hover:shadow-lg transition-all">
+                            <div className="pb-6">
+                                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center">
+                                    <LightbulbIcon />
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                    Deeper understanding of the system
+                                </h3>
+                            </div>
+                            <div>
+                                <p className="text-gray-600 leading-relaxed">
+                                    Hands-on approach will give you better clarity on the
+                                    functioning of KeyTagJo.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            </div>
+        </section>
+    );
+}

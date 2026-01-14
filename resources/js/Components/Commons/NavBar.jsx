@@ -77,7 +77,7 @@ export default function NavBar({ className = '' }) {
                                 {[
                                     { name: 'Home', href: '/' },
                                     { name: 'Demo', href: '/demo' },
-                                    { name: 'Free Plan', href: '/' },
+                                    { name: 'Free Plan', href: '/free-plan' },
                                     { name: 'Pro Plan', href: '/' },
                                     { name: 'Story', href: '/' },
                                     { name: 'Blog', href: '/' },
@@ -158,8 +158,8 @@ export default function NavBar({ className = '' }) {
                     <nav className="flex flex-col space-y-2">
                         {[
                             { name: 'Home', href: '/' },
-                            { name: 'Product Demo', href: '/' },
-                            { name: 'Free Guide', href: '/' },
+                            { name: 'Product Demo', href: '/demo' },
+                            { name: 'Free Guide', href: '/free-plan' },
                             { name: 'Pro Plan', href: '/' },
                             { name: 'Story', href: '/' },
                             { name: 'Blog', href: '/' },
