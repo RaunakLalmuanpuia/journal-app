@@ -78,7 +78,7 @@ export default function NavBar({ className = '' }) {
                                     { name: 'Home', href: '/' },
                                     { name: 'Demo', href: '/demo' },
                                     { name: 'Free Plan', href: '/free-plan' },
-                                    { name: 'Pro Plan', href: '/' },
+                                    { name: 'Pro Plan', href: '/paid-plan' },
                                     { name: 'Story', href: '/' },
                                     { name: 'Blog', href: '/' },
                                 ].map((item) => (
@@ -160,7 +160,7 @@ export default function NavBar({ className = '' }) {
                             { name: 'Home', href: '/' },
                             { name: 'Product Demo', href: '/demo' },
                             { name: 'Free Guide', href: '/free-plan' },
-                            { name: 'Pro Plan', href: '/' },
+                            { name: 'Pro Plan', href: '/paid-plan' },
                             { name: 'Story', href: '/' },
                             { name: 'Blog', href: '/' },
                         ].map((item) => (

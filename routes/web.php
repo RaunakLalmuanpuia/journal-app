@@ -37,4 +37,10 @@ Route::get('/free-plan', function () {
     ]);
 });
 
+Route::get('/paid-plan', function () {
+    return Inertia::render('Frontend/PaidPlan/Index', [
+
+    ]);
+});
+
 require __DIR__.'/auth.php';
