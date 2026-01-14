@@ -107,10 +107,6 @@ export default function NavBar({ className = '' }) {
                                             Dashboard
                                         </button>
                                     </Link>
-                                    <Link  href={route('logout')}  method="post" as="button"
-                                           className={btnClass('outline', "text-[#12b5e2] hover:bg-[#12b5e2] hover:bg-opacity-10 border-[#12b5e2]")}>
-                                        Log Out
-                                    </Link>
                                 </div>
                             ) : (
                                 <div className="flex items-center space-x-3 pl-6 border-l border-gray-200">

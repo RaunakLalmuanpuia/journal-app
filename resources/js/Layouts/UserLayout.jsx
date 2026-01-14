@@ -165,7 +165,11 @@ function Sidebar({ isCollapsed, onToggleCollapse, user, roles, currentUrl }) {
                             className="w-full flex justify-center relative"
                         >
                             <div className="w-8 h-8 bg-[#12b5e2] rounded-lg flex items-center justify-center text-white font-bold text-xs">
-                                KJ
+                                <img
+                                    src="/assets/logo.png"
+                                    alt="KeyTag Journal Logo"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                             {!isHovered && (
                                 <button
