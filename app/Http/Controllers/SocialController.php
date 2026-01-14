@@ -14,7 +14,9 @@ class SocialController extends Controller
      */
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')
+            ->scopes(['openid', 'profile', 'https://www.googleapis.com/auth/drive.file'])
+            ->redirect();
     }
 
     /**

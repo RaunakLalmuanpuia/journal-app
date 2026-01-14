@@ -50,9 +50,10 @@ export default function Login({ status, canResetPassword }) {
 
                     <div className="space-y-6">
                         {/* Google Button (Visual Only as requested) */}
-                        <button
-                            type="button"
-                            className="w-full h-11 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-sm font-medium flex items-center justify-center transition-colors"
+                        {/* Google Button - Changed from <button> to <a> */}
+                        <a
+                            href={route('auth.google')}
+                            className="w-full h-11 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-sm font-medium flex items-center justify-center transition-colors cursor-pointer"
                         >
                             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                                 <path
@@ -73,7 +74,7 @@ export default function Login({ status, canResetPassword }) {
                                 />
                             </svg>
                             Continue with Google
-                        </button>
+                        </a>
 
 
 

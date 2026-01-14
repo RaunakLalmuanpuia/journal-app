@@ -44,6 +44,8 @@ class GoogleLoginRequest extends FormRequest
             // stateless() is often used to avoid state mismatch errors in some setups
             $googleUser = Socialite::driver('google')->stateless()->user();
 
+
+//            dd($googleUser);
             // 2. Find or Create User
             // We verify by email first to merge accounts if they used normal registration before
             $user = User::updateOrCreate([
@@ -56,7 +58,11 @@ class GoogleLoginRequest extends FormRequest
                 'email_verified_at' => now(),
             ]);
 
-            // 3. Log the user in
+            // 4. Assign User Role
+            if ($user->wasRecentlyCreated) {
+                $user->assignRole('User'); // make sure role exists
+            }
+            // 4. Log the user in
             Auth::login($user, $remember = true);
 
         } catch (\Exception $e) {
