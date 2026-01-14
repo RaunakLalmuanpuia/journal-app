@@ -25,4 +25,10 @@ Route::middleware('auth')->group(function () {
 });
 
 
+Route::get('/demo', function () {
+    return Inertia::render('Frontend/Demo/Index', [
+
+    ]);
+});
+
 require __DIR__.'/auth.php';

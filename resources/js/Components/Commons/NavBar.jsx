@@ -76,7 +76,7 @@ export default function NavBar({ className = '' }) {
                             <nav className="flex items-center space-x-1 lg:space-x-6">
                                 {[
                                     { name: 'Home', href: '/' },
-                                    { name: 'Demo', href: '/' },
+                                    { name: 'Demo', href: '/demo' },
                                     { name: 'Free Plan', href: '/' },
                                     { name: 'Pro Plan', href: '/' },
                                     { name: 'Story', href: '/' },
