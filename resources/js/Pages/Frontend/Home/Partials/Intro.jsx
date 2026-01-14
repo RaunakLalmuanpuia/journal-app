@@ -39,7 +39,7 @@ export default function Intro() {
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                             <Link
-                                href={route('register')}
+                                href={'paid-plan'}
                                 className="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 border border-transparent text-lg font-medium rounded-lg text-white bg-[#12b5e2] hover:bg-[#0ea5d3] transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
                             >
                                 Get Started

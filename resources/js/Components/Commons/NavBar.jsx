@@ -55,7 +55,7 @@ export default function NavBar({ className = '' }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
-                        <Link href="/public" className="flex items-center space-x-3 group">
+                        <Link href="/" className="flex items-center space-x-3 group">
                             <div className="w-8 h-8 rounded-lg overflow-hidden group-hover:scale-105 transition-transform">
                                 {/* Using your ApplicationLogo here, adapted to fit the design */}
 
@@ -114,7 +114,7 @@ export default function NavBar({ className = '' }) {
                                 </div>
                             ) : (
                                 <div className="flex items-center space-x-3 pl-6 border-l border-gray-200">
-                                    <Link href={route('register')}>
+                                    <Link href={route('login')}>
                                         <button className={btnClass('default', "bg-[#12b5e2] hover:bg-[#0ea5d3] text-white")}>
                                             Get Started
                                         </button>
