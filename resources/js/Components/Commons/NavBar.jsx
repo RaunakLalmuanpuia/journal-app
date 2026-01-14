@@ -79,7 +79,7 @@ export default function NavBar({ className = '' }) {
                                     { name: 'Demo', href: '/demo' },
                                     { name: 'Free Plan', href: '/free-plan' },
                                     { name: 'Pro Plan', href: '/paid-plan' },
-                                    { name: 'Story', href: '/' },
+                                    { name: 'Story', href: '/story' },
                                     { name: 'Blog', href: '/' },
                                 ].map((item) => (
                                     <Link key={item.name} href={item.href}>
@@ -161,7 +161,7 @@ export default function NavBar({ className = '' }) {
                             { name: 'Product Demo', href: '/demo' },
                             { name: 'Free Guide', href: '/free-plan' },
                             { name: 'Pro Plan', href: '/paid-plan' },
-                            { name: 'Story', href: '/' },
+                            { name: 'Story', href: '/story' },
                             { name: 'Blog', href: '/' },
                         ].map((item) => (
                             <Link key={item.name} href={item.href} onClick={closeMobileMenu}>
