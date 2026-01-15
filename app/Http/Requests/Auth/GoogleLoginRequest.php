@@ -62,16 +62,16 @@ class GoogleLoginRequest extends FormRequest
             /**
              * Store Google OAuth Tokens
              */
-            GoogleAccount::updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'google_id'        => $googleUser->id,
-                    'email'            => $googleUser->email,
-                    'access_token'     => $googleUser->token,
-                    'refresh_token'    => $googleUser->refreshToken,
-                    'token_expires_at' => now()->addSeconds($googleUser->expiresIn),
-                ]
-            );
+//            GoogleAccount::updateOrCreate(
+//                ['user_id' => $user->id],
+//                [
+//                    'google_id'        => $googleUser->id,
+//                    'email'            => $googleUser->email,
+//                    'access_token'     => $googleUser->token,
+//                    'refresh_token'    => $googleUser->refreshToken,
+//                    'token_expires_at' => now()->addSeconds($googleUser->expiresIn),
+//                ]
+//            );
 
 
             // 4. Assign User Role
