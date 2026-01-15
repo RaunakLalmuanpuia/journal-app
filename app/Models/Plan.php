@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Plan extends Model
 {
@@ -27,6 +28,16 @@ class Plan extends Model
     {
         return $this->belongsToMany(User::class, 'user_plans')
             ->withPivot(['starts_at', 'ends_at', 'status']);
+    }
+
+    public function driveResources() : HasMany
+    {
+        return $this->hasMany(DriveResource::class);
+    }
+
+    public function payments() : HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
 }

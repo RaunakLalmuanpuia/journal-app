@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Plan;
-use Illuminate\Support\Collection;
+use App\Models\Payment;
+use App\Models\DriveResource;
+use Illuminate\Support\Str;
 
 class UserPlanSeeder extends Seeder
 {
@@ -13,28 +15,55 @@ class UserPlanSeeder extends Seeder
     {
         $plans = Plan::all();
 
-        // 🔹 Only normal users (exclude admin)
-        $users = User::where('id', '!=', 1)
-            ->limit(5)
-            ->get();
+        // Exclude admin
+        $users = User::where('email', '!=', 'admin@mail.com')->get();
 
         foreach ($users as $user) {
 
-            // 🔹 Each user gets 1 to N plans randomly
-            $randomPlans = $plans->random(rand(1, $plans->count()));
+            // Randomly assign 1 or 2 plans
+            $assignedPlans = $plans->random(rand(1, $plans->count()));
 
-            foreach ($randomPlans as $plan) {
+            foreach ($assignedPlans as $plan) {
 
-                $endsAt = $plan->duration_days
-                    ? now()->addDays($plan->duration_days)
-                    : null;
-
+                // Attach plan
                 $user->plans()->syncWithoutDetaching([
                     $plan->id => [
                         'starts_at' => now(),
-                        'ends_at'   => $endsAt,
-                        'status'    => 'active',
+                        'ends_at' => $plan->duration_days
+                            ? now()->addDays($plan->duration_days)
+                            : null,
+                        'status' => 'active',
                     ],
+                ]);
+
+                /* ------------------------
+                 | PAID PLAN → PAYMENT
+                 |------------------------*/
+                if ($plan->price > 0) {
+                    Payment::create([
+                        'user_id' => $user->id,
+                        'plan_id' => $plan->id,
+                        'amount' => $plan->price,
+                        'currency' => 'INR',
+                        'gateway' => 'razorpay',
+                        'transaction_id' => 'TXN-' . Str::upper(Str::random(10)),
+                        'status' => 'paid',
+                        'paid_at' => now(),
+                    ]);
+                }
+
+                /* ------------------------
+                 | DRIVE RESOURCE
+                 |------------------------*/
+                DriveResource::create([
+                    'user_id' => $user->id,
+                    'plan_id' => $plan->id,
+                    'type' => $plan->price == 0 ? 'sheet' : 'folder',
+                    'google_file_id' => 'mock_' . Str::uuid(),
+                    'name' => $plan->price == 0
+                        ? "{$user->name} Free Sheet"
+                        : "{$user->name} Pro Folder",
+                    'status' => 'active',
                 ]);
             }
         }

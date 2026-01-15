@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -55,4 +57,31 @@ class User extends Authenticatable
             ->withPivot(['starts_at', 'ends_at', 'status'])
             ->withTimestamps();
     }
+    public function googleAccount() :HasOne
+    {
+        return $this->hasOne(GoogleAccount::class);
+    }
+
+    public function driveResources() : HasMany
+    {
+        return $this->hasMany(DriveResource::class);
+    }
+
+    public function payments() : HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    //$hasActiveFree = $user->activeFreePlan()->exists();
+    public function activeFreePlan()
+    {
+        return $this->plans()
+            ->where('plans.type', 'free')
+            ->wherePivot('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('user_plans.ends_at')
+                    ->orWhere('user_plans.ends_at', '>', now());
+            });
+    }
+
 }
