@@ -16,6 +16,7 @@ class SocialController extends Controller
     {
         return Socialite::driver('google')
             ->scopes(['openid', 'profile', 'https://www.googleapis.com/auth/drive.file'])
+            ->with(['access_type' => 'offline', 'prompt' => 'consent'])
             ->redirect();
     }
 

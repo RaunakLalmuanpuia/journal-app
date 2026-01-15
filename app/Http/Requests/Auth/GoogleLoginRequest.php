@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\GoogleAccount;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
@@ -57,6 +58,21 @@ class GoogleLoginRequest extends FormRequest
                 'password' => Hash::make(Str::random(32)), // Secure random password
                 'email_verified_at' => now(),
             ]);
+
+            /**
+             * Store Google OAuth Tokens
+             */
+            GoogleAccount::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'google_id'        => $googleUser->id,
+                    'email'            => $googleUser->email,
+                    'access_token'     => $googleUser->token,
+                    'refresh_token'    => $googleUser->refreshToken,
+                    'token_expires_at' => now()->addSeconds($googleUser->expiresIn),
+                ]
+            );
+
 
             // 4. Assign User Role
             if ($user->wasRecentlyCreated) {
