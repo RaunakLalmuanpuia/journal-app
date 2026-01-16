@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\GoogleAccount;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
@@ -80,6 +81,14 @@ class GoogleLoginRequest extends FormRequest
             }
             // 4. Log the user in
             Auth::login($user, $remember = true);
+
+            $freePlan = Plan::where('type', 'free')->first();
+            $user->plans()->syncWithoutDetaching([
+                $freePlan->id => [
+                    'status' => 'active',
+                    'starts_at' => now(),
+                ],
+            ]);
 
         } catch (\Exception $e) {
             // Hit the rate limiter if authentication fails

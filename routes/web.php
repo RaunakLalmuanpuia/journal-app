@@ -7,6 +7,8 @@ use Inertia\Inertia;
 use App\Http\Controllers\SocialController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\GoogleDriveAuthController;
+
 
 
 Route::get('/', function () {
@@ -48,5 +50,16 @@ Route::middleware('auth')->group(function () {
 
 Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
+
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/pro/connect-drive', [GoogleDriveAuthController::class, 'redirect'])
+        ->name('pro.connect.drive');
+
+    Route::get('/pro/drive/callback', [GoogleDriveAuthController::class, 'callback']);
+});
+
+
 
 require __DIR__.'/auth.php';

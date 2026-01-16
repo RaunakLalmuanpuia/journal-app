@@ -16,6 +16,10 @@ export default function User() {
     const { auth } = props;
     const user = auth.user;
 
+    const hasPro = user.plans.some(
+        p => p.type === 'pro' && p.pivot.status === 'active'
+    );
+
     return (
         <UserLayout>
             <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
@@ -159,10 +163,25 @@ export default function User() {
                                             {/*</div>*/}
                                         </div>
 
+                                        {!hasPro && (
+                                            <button
+                                               className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors"
+                                                onClick={() => window.location.href = route('pro.connect.drive')}
+                                            >
+                                                Activate Pro
+                                            </button>
+                                        )}
+
+                                        {hasPro && (
+                                            <div className="mt-6 text-green-700 font-medium">
+                                                ✅ Pro Active — Your Google Sheet is ready in Drive
+                                            </div>
+                                        )}
+
                                         {/* Button Placeholder for Pro Plan */}
-                                        <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors">
-                                            Upgrade to Pro
-                                        </button>
+                                        {/*<button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors">*/}
+                                        {/*    Upgrade to Pro*/}
+                                        {/*</button>*/}
                                     </div>
                                 </div>
 
@@ -217,7 +236,7 @@ export default function User() {
                                         </div>
 
                                         {/* Button Placeholder for Enterprise Plan */}
-                                        <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 border border-[#12b5e2] bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors">
+                                        <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 border border-[#12b5e2]  transition-colors">
                                            Claim Enterprise Plan
                                         </button>
                                     </div>
