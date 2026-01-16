@@ -15,6 +15,7 @@ class DriveResource extends Model
         'google_file_id',
         'name',
         'status',
+        'link'
     ];
 
     public function user() : BelongsTo

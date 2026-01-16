@@ -14,11 +14,6 @@ class GoogleDriveAuthController extends Controller
         return Socialite::driver('google')
             ->redirectUrl(config('services.google.drive_redirect'))
             ->scopes(['email', 'profile'])
-            ->with([
-                'prompt' => 'consent',
-                'access_type' => 'offline',
-                'include_granted_scopes' => 'false',
-            ])
             ->redirect();
     }
 

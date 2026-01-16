@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('type', ['sheet', 'folder']);
             $table->string('google_file_id');
             $table->string('name');
+            $table->string('link')->nullable();
 
             $table->enum('status', ['active', 'revoked'])->default('active');
             $table->timestamps();
