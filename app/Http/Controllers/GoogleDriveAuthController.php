@@ -12,9 +12,16 @@ class GoogleDriveAuthController extends Controller
 {
     public function redirect()
     {
+//        return Socialite::driver('google')
+//            ->redirectUrl(config('services.google.drive_redirect'))
+//            ->scopes(['email', 'profile'])
+//            ->redirect();
         return Socialite::driver('google')
             ->redirectUrl(config('services.google.drive_redirect'))
-            ->scopes(['email', 'profile'])
+            // ADDED: Drive scope needed to create files
+            ->scopes(['email', 'profile', 'https://www.googleapis.com/auth/drive.file'])
+            // ADDED: Necessary to get the 'refresh_token' for background jobs
+            ->with(['access_type' => 'offline', 'prompt' => 'consent'])
             ->redirect();
     }
 

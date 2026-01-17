@@ -42,7 +42,6 @@ return [
         'bot_client_id'=> env('GOOGLE_BOT_CLIENT_ID'),
         'bot_client_secret'=> env('GOOGLE_BOT_CLIENT_SECRET'),
         'bot_refresh_token' => env('GOOGLE_BOT_REFRESH_TOKEN'),
-        'sheet_template_id' => env('GOOGLE_SHEET_TEMPLATE_ID'),
         'template_folder_id' => env('GOOGLE_TEMPLATE_FOLDER_ID'),
     ],
 
