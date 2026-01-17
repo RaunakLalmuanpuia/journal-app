@@ -6,6 +6,7 @@ use App\Models\Plan;
 use App\Services\SheetCopyService;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use App\Jobs\ProvisionUserDrive; // Import the Job
 
 class GoogleDriveAuthController extends Controller
 {
@@ -21,26 +22,27 @@ class GoogleDriveAuthController extends Controller
     {
         $user = Auth::user();
 
-        // Get the token from Socialite callback
+        // 1. Handle Socialite
         $googleUser = Socialite::driver('google')
             ->redirectUrl(config('services.google.drive_redirect'))
-            ->stateless()->user();
-        $accessToken = $googleUser->token; // <-- This is the token we pass to SheetCopyService
+            ->stateless()
+            ->user();
 
-        // Save Google account info (optional)
+        // 2. Update Token
         $user->googleAccount()->updateOrCreate(
             ['google_id' => $googleUser->id],
             [
                 'email' => $googleUser->email,
-                'access_token' => $accessToken,
+                'access_token' => $googleUser->token,
                 'refresh_token' => $googleUser->refreshToken,
                 'token_expires_at' => now()->addSeconds($googleUser->expiresIn),
             ]
         );
 
-        // Activate Pro plan
+        // 3. Activate Plan
         $proPlan = Plan::where('type', 'pro')->firstOrFail();
 
+        // Sync without detaching ensures we don't overwrite existing active plans if logic changes
         $user->plans()->syncWithoutDetaching([
             $proPlan->id => [
                 'status' => 'active',
@@ -48,14 +50,14 @@ class GoogleDriveAuthController extends Controller
             ],
         ]);
 
-        // CHANGE THIS LINE: Call the folder provisioner
-        SheetCopyService::provisionFolderForUser($user, $proPlan);
+        // 4. Dispatch the Background Job (Fixes Timeout)
+        // This runs the heavy Google API logic in the background
+        ProvisionUserDrive::dispatch($user, $proPlan);
 
         return redirect('/dashboard')->with(
             'success',
-            'Pro activated and Google Sheet copied to your Drive 🎉'
+            'Pro activated! We are setting up your Google Drive folder in the background. It will appear in a few minutes.'
         );
-
     }
 
 }

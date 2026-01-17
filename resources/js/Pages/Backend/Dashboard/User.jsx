@@ -1,28 +1,59 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     ArrowRight,
     CheckCircle2,
     Star,
     Users,
-    Shield
+    Loader2, // Added for the spinner
+    ExternalLink,
+    FolderCheck
 } from 'lucide-react';
 import UserLayout from '@/Layouts/UserLayout';
-import {usePage} from "@inertiajs/react";
-
+import { usePage, router } from "@inertiajs/react";
+import ProvisioningModal from '@/Components/ProvisioningModal'; // Save the code above to this file
 
 export default function User() {
-
     const { props } = usePage();
     const { auth } = props;
     const user = auth.user;
 
+    // 1. Check Plan Status
     const hasPro = user.plans.some(
         p => p.type === 'pro' && p.pivot.status === 'active'
     );
 
+    // 2. Check if Drive Resource Exists
+    // We assume your User model loads 'driveResources' (e.g., user.drive_resources)
+    // If you haven't loaded this relationship in HandleInertiaRequests or the Controller,
+    // you might need to check "user.drive_resources" vs "user.driveResources" depending on your casing.
+    const driveResources = user.drive_resources || user.driveResources || [];
+    const proFolder = driveResources.find(r => r.type === 'folder' && r.plan_id !== null);
+
+    // 3. Determine if we are in "Provisioning Mode"
+    // User has paid (Pro) BUT no folder exists yet.
+    const isProvisioning = hasPro && !proFolder;
+
+    // 4. Polling Logic
+    useEffect(() => {
+        let interval;
+        if (isProvisioning) {
+            // Poll every 3 seconds to see if the job finished
+            interval = setInterval(() => {
+                router.reload({ only: ['auth'] }); // Only reload user data to save bandwidth
+            }, 3000);
+        }
+        return () => clearInterval(interval);
+    }, [isProvisioning]);
+
+
     return (
         <UserLayout>
-            <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+            <div className="min-h-screen bg-gray-50 font-sans text-gray-900 relative">
+
+                {/* --- PROVISIONING MODAL --- */}
+                {isProvisioning && (
+                    <ProvisioningModal />
+                )}
 
                 {/* Header */}
                 <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -33,7 +64,6 @@ export default function User() {
                                     Welcome, {user?.name}
                                 </h1>
                             </div>
-                            {/* Optional: Add profile icon or logout here if needed */}
                         </div>
                     </div>
                 </div>
@@ -45,19 +75,17 @@ export default function User() {
                         {/* Plans & Tools Section */}
                         <section className="space-y-6">
 
-                            {/* Header with My Products Button */}
                             <div className="flex items-start justify-between mb-6">
                                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                                     Available Plans
                                 </h2>
 
-                                <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 px-3 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white">
+                                <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors">
                                     My Products
                                     <ArrowRight className="w-4 h-4 ml-2" />
                                 </button>
                             </div>
 
-                            {/* Plans Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
 
                                 {/* --- Free Plan --- */}
@@ -106,10 +134,8 @@ export default function User() {
                                         </button>
                                     </div>
                                 </div>
-
                                 {/* --- Pro Plan --- */}
                                 <div className="bg-white text-gray-950 flex flex-col gap-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 py-6 relative overflow-hidden">
-                                    {/* Popular Badge */}
                                     <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-bl-lg">
                                         Popular
                                     </div>
@@ -120,68 +146,70 @@ export default function User() {
                                                 <Star className="w-5 h-5 sm:w-6 sm:h-6 text-[#12b5e2]" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                                                    Pro Plan
-                                                </h3>
-                                                <p className="text-xs text-gray-600 leading-relaxed mt-0.5">
-                                                    For power users who want 24/7 tracking and deeper insights.
-                                                </p>
+                                                <h3 className="font-medium text-gray-900 text-sm sm:text-base">Pro Plan</h3>
+                                                <p className="text-xs text-gray-600 leading-relaxed mt-0.5">For power users who want 24/7 tracking.</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="px-4 sm:px-6 pt-0 pb-4 sm:pb-6 flex-1 flex flex-col justify-between">
-                                        <div>
-                                            <ul className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm text-gray-700 mb-4">
-                                                <li className="flex items-start">
-                                                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
-                                                    <span>Everything in Basic, plus advanced features</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
-                                                    <span>Track every minute with flexible, color-coded cells</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
-                                                    <span>Merge cells for uninterrupted activity logging</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
-                                                    <span>Automatic color scoring for quick performance feedback</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
-                                                    <span>Advanced dashboards with richer weekly, monthly, and yearly insights</span>
-                                                </li>
-                                            </ul>
-
-                                            {/*<div className="mb-3 text-xs sm:text-sm text-gray-500 flex items-center justify-between">*/}
-                                            {/*  <span className="flex items-center">*/}
-                                            {/*    <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-[#12b5e2]" />*/}
-                                            {/*    Inactive*/}
-                                            {/*  </span>*/}
-                                            {/*</div>*/}
-                                        </div>
-
+                                        <ul className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm text-gray-700 mb-4">
+                                            <li className="flex items-start">
+                                                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
+                                                <span>Everything in Basic, plus advanced features</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
+                                                <span>Track every minute with flexible, color-coded cells</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
+                                                <span>Merge cells for uninterrupted activity logging</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
+                                                <span>Automatic color scoring for quick performance feedback</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
+                                                <span>Advanced dashboards with richer weekly, monthly, and yearly insights</span>
+                                            </li>
+                                        </ul>
+                                        {/* STATE: NOT PRO */}
                                         {!hasPro && (
                                             <button
-                                               className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors"
+                                                className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors"
                                                 onClick={() => window.location.href = route('pro.connect.drive')}
                                             >
                                                 Activate Pro
                                             </button>
                                         )}
 
-                                        {hasPro && (
-                                            <div className="mt-6 text-green-700 font-medium">
-                                                ✅ Pro Active — Your Google Sheet is ready in Drive
+                                        {/* STATE: PRO ACTIVE + FOLDER READY */}
+                                        {hasPro && proFolder && (
+                                            <div className="space-y-3">
+                                                <div className="text-green-600 text-xs font-medium flex items-center bg-green-50 p-2 rounded">
+                                                    <FolderCheck className="w-4 h-4 mr-2" />
+                                                    Drive Folder Connected
+                                                </div>
+                                                <a
+                                                    href={proFolder.link}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-900 transition-colors"
+                                                >
+                                                    Open Dashboard <ExternalLink className="w-4 h-4 ml-2" />
+                                                </a>
                                             </div>
                                         )}
 
-                                        {/* Button Placeholder for Pro Plan */}
-                                        {/*<button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors">*/}
-                                        {/*    Upgrade to Pro*/}
-                                        {/*</button>*/}
+                                        {/* STATE: PRO ACTIVE + PROVISIONING (Handled by Modal usually, but fallback here) */}
+                                        {hasPro && !proFolder && (
+                                            <div className="text-blue-600 text-xs font-medium flex items-center bg-blue-50 p-2 rounded animate-pulse">
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Provisioning Drive...
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -193,16 +221,11 @@ export default function User() {
                                                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#12b5e2]" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                                                    Enterprise Plan
-                                                </h3>
-                                                <p className="text-xs text-gray-600 leading-relaxed mt-0.5">
-                                                    For professionals who want customization and personal support.
-                                                </p>
+                                                <h3 className="font-medium text-gray-900 text-sm sm:text-base">Enterprise</h3>
+                                                <p className="text-xs text-gray-600 leading-relaxed mt-0.5">For custom solutions.</p>
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="px-4 sm:px-6 pt-0 pb-4 sm:pb-6 flex-1 flex flex-col justify-between">
                                         <div>
                                             <ul className="space-y-2 sm:space-y-2.5 text-xs sm:text-sm text-gray-700 mb-4">
@@ -237,17 +260,28 @@ export default function User() {
 
                                         {/* Button Placeholder for Enterprise Plan */}
                                         <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 border border-[#12b5e2]  transition-colors">
-                                           Claim Enterprise Plan
+                                            Claim Enterprise Plan
                                         </button>
                                     </div>
+
                                 </div>
 
                             </div>
                         </section>
                     </div>
                 </div>
+
+                <style>{`
+                    @keyframes progress {
+                        0% { transform: translateX(-100%); }
+                        50% { transform: translateX(-20%); }
+                        100% { transform: translateX(0%); }
+                    }
+                    .animate-progress {
+                        animation: progress 30s ease-out forwards;
+                    }
+                `}</style>
             </div>
         </UserLayout>
-
     );
 }
