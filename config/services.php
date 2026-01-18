@@ -39,6 +39,7 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URL'),
         'drive_redirect'=> env('GOOGLE_DRIVE_REDIRECT_URL'), // DRIVE
+        'bot_client_email' => env('GOOGLE_BOT_EMAIL'),
         'bot_client_id'=> env('GOOGLE_BOT_CLIENT_ID'),
         'bot_client_secret'=> env('GOOGLE_BOT_CLIENT_SECRET'),
         'bot_refresh_token' => env('GOOGLE_BOT_REFRESH_TOKEN'),

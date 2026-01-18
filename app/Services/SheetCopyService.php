@@ -65,6 +65,36 @@ class SheetCopyService
             $newFolder = $userDrive->files->create($folderMetadata, [
                 'fields' => 'id, name, webViewLink'
             ]);
+
+            // NEW: SHARE FOLDER WITH BOT
+// ---------------------------------------------------------
+            $botEmail = config('services.google.bot_client_email');
+
+            Log::info("DEBUG: Bot Email from config is: '{$botEmail}'"); // <--- CHECK THIS LOG
+
+            if (!empty($botEmail)) {
+                try {
+                    $permission = new Permission([
+                        'type' => 'user',
+                        'role' => 'writer',
+                        'emailAddress' => $botEmail
+                    ]);
+
+                    // Capture the result
+                    $createdPermission = $userDrive->permissions->create($newFolder->id, $permission, [
+                        'sendNotificationEmail' => false
+                    ]);
+
+                    Log::info("SUCCESS: Folder shared with {$botEmail}. Permission ID: " . $createdPermission->id);
+                } catch (\Exception $e) {
+                    // This catches specific sharing errors (like Domain Restrictions)
+                    Log::error("SHARING ERROR: Could not share with {$botEmail}. Reason: " . $e->getMessage());
+                    // We don't throw $e here so the rest of the script (copying files) can still finish
+                }
+            } else {
+                Log::error("SKIPPING SHARE: Bot email config is missing or empty.");
+            }
+
         } catch (\Google\Service\Exception $e) {
             // Check your storage/logs/laravel.log for this error!
             Log::error('Google Drive Create Failed: ' . $e->getMessage());
