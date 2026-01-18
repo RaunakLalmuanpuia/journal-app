@@ -3,7 +3,7 @@ import UserLayout from '@/Layouts/UserLayout.jsx';
 import { Head } from '@inertiajs/react';
 import {
     Star, Users, CheckCircle2, Loader2, BookOpen,
-    MessageCircle, Clock, FolderOpen, ExternalLink,
+    MessageCircle, Clock, FolderOpen, ExternalLink,LayoutDashboard,
     Sheet, Eye
 } from 'lucide-react';
 
@@ -216,6 +216,7 @@ function PlanCard({ claim, setUserGuideOpen }) {
                 )}
 
                 {/* --- PRO PLAN CONTENT --- */}
+                {/* --- PRO PLAN CONTENT (UPDATED) --- */}
                 {isPro && (
                     <div className="flex-1 flex flex-col">
                         <div className="mb-4">
@@ -240,54 +241,68 @@ function PlanCard({ claim, setUserGuideOpen }) {
                             )}
                         </div>
 
-                        {/* Drive Folder Contents Grid */}
-                        {claim.resources && claim.resources.length > 0 ? (
+                        {/* Updated to iterate over claim.files instead of claim.resources */}
+                        {claim.files && claim.files.length > 0 ? (
                             <div className="space-y-3 flex-1">
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-sm font-medium text-gray-900 flex items-center">
                                         <Sheet className="w-4 h-4 mr-1.5 text-[#0f9d58]" />
-                                        Google Sheets
+                                        Files
                                     </h4>
                                     <div className="flex items-center space-x-2 text-xs text-gray-500">
                                         <Sheet className="w-3 h-3" />
-                                        <span>{claim.resources.length} templates</span>
+                                        <span>{claim.files.length} items</span>
                                     </div>
                                 </div>
 
                                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                                     <div className="p-4">
                                         <div className="grid grid-cols-4 gap-3">
-                                            {claim.resources.slice(0, 8).map((resource, index) => (
-                                                <a
-                                                    key={resource.id}
-                                                    href={resource.link}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="relative bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#0f9d58] transition-all block group"
-                                                >
-                                                    {/* File Preview */}
-                                                    <div className="aspect-square relative bg-gray-50 flex items-center justify-center rounded-t-lg group-hover:bg-green-50 transition-colors">
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 opacity-50" />
-                                                        <div className="relative z-10">
-                                                            <Sheet className="w-8 h-8 text-[#0f9d58] drop-shadow-sm" />
+                                            {claim.files.slice(0, 8).map((file, index) => {
+                                                // Determine icon based on file type
+                                                const isDashboard = file.type === 'dashboard';
+
+                                                return (
+                                                    <a
+                                                        key={file.id || index}
+                                                        href={file.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title={file.name}
+                                                        className="relative bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#0f9d58] transition-all block group"
+                                                    >
+                                                        {/* File Icon Preview */}
+                                                        <div className={`aspect-square relative flex items-center justify-center rounded-t-lg transition-colors ${isDashboard ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-green-50 group-hover:bg-green-100'}`}>
+
+                                                            {/* Gradient Overlay */}
+                                                            <div className={`absolute inset-0 opacity-50 bg-gradient-to-br ${isDashboard ? 'from-blue-50 to-blue-200' : 'from-green-50 to-green-100'}`} />
+
+                                                            <div className="relative z-10">
+                                                                {isDashboard ? (
+                                                                    <LayoutDashboard className="w-8 h-8 text-blue-600 drop-shadow-sm" />
+                                                                ) : (
+                                                                    <Sheet className="w-8 h-8 text-[#0f9d58] drop-shadow-sm" />
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    {/* File Name */}
-                                                    <div className="px-1 py-1 bg-white">
-                                                        <p className="text-[10px] font-medium text-gray-700 text-center leading-tight truncate">
-                                                            {resource.name}
-                                                        </p>
-                                                    </div>
-                                                </a>
-                                            ))}
+
+                                                        {/* File Name */}
+                                                        <div className="px-1 py-1 bg-white border-t border-gray-100">
+                                                            <p className="text-[10px] font-medium text-gray-700 text-center leading-tight truncate">
+                                                                {file.name}
+                                                            </p>
+                                                        </div>
+                                                    </a>
+                                                );
+                                            })}
                                         </div>
 
                                         {/* Footer for extra files */}
-                                        {claim.resources.length > 8 && (
+                                        {claim.files.length > 8 && (
                                             <div className="mt-4 pt-4 border-t border-gray-100">
                                                 <div className="w-full text-xs text-[#0f9d58] flex items-center justify-center py-2 rounded-lg bg-green-50">
                                                     <Sheet className="w-4 h-4 mr-2" />
-                                                    +{claim.resources.length - 8} more files
+                                                    +{claim.files.length - 8} more files
                                                 </div>
                                             </div>
                                         )}
@@ -295,7 +310,7 @@ function PlanCard({ claim, setUserGuideOpen }) {
                                 </div>
                             </div>
                         ) : (
-                            // Empty State / Loading Preview if URL exists but no resources yet
+                            // Empty State / Loading Preview
                             claim.driveUrl && (
                                 <div className="space-y-3 flex-1 flex flex-col justify-center">
                                     <div className="text-center py-6">
@@ -312,23 +327,15 @@ function PlanCard({ claim, setUserGuideOpen }) {
                         {/* Action Buttons */}
                         <div className="flex space-x-2 mt-4 pt-3 border-t border-gray-100">
                             {claim.driveUrl && (
-                                <>
-                                    <a
-                                        href={claim.driveUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-[#12b5e2] hover:bg-[#0ea5d4] text-white flex-1 h-9 px-3"
-                                    >
-                                        <ExternalLink className="w-3 h-3 mr-1" />
-                                        Open Drive
-                                    </a>
-                                    <button
-                                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-[#12b5e2] text-[#12b5e2] hover:bg-[#12b5e2] hover:text-white bg-transparent flex-1 h-9 px-3"
-                                    >
-                                        <Eye className="w-3 h-3 mr-1" />
-                                        Preview
-                                    </button>
-                                </>
+                                <a
+                                    href={claim.driveUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-[#12b5e2] hover:bg-[#0ea5d4] text-white flex-1 h-9 px-3"
+                                >
+                                    <ExternalLink className="w-3 h-3 mr-1" />
+                                    Open Drive
+                                </a>
                             )}
                         </div>
                     </div>

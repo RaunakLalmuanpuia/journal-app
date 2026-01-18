@@ -134,14 +134,25 @@ class SheetCopyService
         // 5. SAVE TO DB
         // ------------------------------------------------------
 
-        $user->driveResources()->create([
+        // A. Create the Main Resource (The Folder)
+        $resource = $user->driveResources()->create([
             'type' => 'folder',
             'google_file_id' => $newFolder->id,
             'name' => $newFolder->name,
             'plan_id' => $plan->id,
-            'ownership' => 'owner', // Verified Owner
+            'status' => 'active',
             'link' => $newFolder->webViewLink
         ]);
+
+        // B. Create the Children Files (Linked to the Resource)
+        foreach ($copyData['allFiles'] as $fileData) {
+            $resource->files()->create([
+                'type' => $fileData['type'], // 'dashboard' or 'sheet'
+                'google_file_id' => $fileData['google_file_id'],
+                'name' => $fileData['name'],
+                'link' => $fileData['link']
+            ]);
+        }
 
         return $newFolder;
     }
@@ -199,8 +210,12 @@ class SheetCopyService
                         'fields' => 'id, name, webViewLink'
                     ]);
 
-                    // 4. Categorize
-                    if (preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i', $createdFile->name)) {
+                    // Determine Type
+                    $isMonthly = preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i', $createdFile->name);
+                    $type = $isMonthly ? 'sheet' : 'dashboard';
+
+                    // 1. Collect for Dashboard Update
+                    if ($isMonthly) {
                         $monthlySheets[] = [
                             'name' => $createdFile->name,
                             'url' => "https://docs.google.com/spreadsheets/d/{$createdFile->id}/edit"
@@ -208,12 +223,20 @@ class SheetCopyService
                     } else {
                         $dashboardId = $createdFile->id;
                     }
+
+                    // 2. Collect for Database Storage
+                    $allFiles[] = [
+                        'google_file_id' => $createdFile->id,
+                        'name' => $createdFile->name,
+                        'link' => $createdFile->webViewLink,
+                        'type' => $type
+                    ];
                 }
             }
             $pageToken = $response->nextPageToken;
         } while ($pageToken != null);
 
-        return ['dashboardId' => $dashboardId, 'monthlySheets' => $monthlySheets];
+        return ['dashboardId' => $dashboardId, 'monthlySheets' => $monthlySheets,'allFiles' => $allFiles];
     }
     private static function getUserClient(User $user)
     {

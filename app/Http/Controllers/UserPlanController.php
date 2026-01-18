@@ -16,24 +16,34 @@ class UserPlanController extends Controller
             ->withPivot(['starts_at', 'ends_at', 'status', 'created_at'])
             ->get()
             ->map(function ($plan) use ($user) {
-                // Fetch resources specifically for this user and plan
-                $resources = DriveResource::where('user_id', $user->id)
+                // 1. Eager load the 'files' relationship defined in your DriveResource model
+                $resources = DriveResource::with('files')
+                    ->where('user_id', $user->id)
                     ->where('plan_id', $plan->id)
                     ->get();
 
-                // specific logic to find the "Main" drive folder link if it exists
-                // Assuming the first resource or a specific type is the main folder
-                $mainResource = $resources->first();
+                // 2. Identify the Main Folder (DriveResource)
+                $mainFolder = $resources->firstWhere('type', 'folder') ?? $resources->first();
+
+                // 3. Extract/Flatten all DriveFiles from the resources
+                // This gets every file inside the folder(s) associated with this plan
+                $allFiles = $resources->flatMap(function ($resource) {
+                    return $resource->files;
+                });
 
                 return [
                     'id' => $plan->id,
                     'name' => $plan->name,
-                    'planType' => strtolower($plan->type), // 'free', 'pro', 'enterprise'
-                    'status' => $plan->pivot->status, // 'active', 'claimed', 'pending'
+                    'planType' => strtolower($plan->type),
+                    'status' => $plan->pivot->status,
                     'claimedAt' => $plan->pivot->created_at->format('M d, Y'),
                     'starts_at' => $plan->pivot->starts_at,
-                    'resources' => $resources, // The list of files/sheets
-                    'driveUrl' => $mainResource ? $mainResource->link : null,
+
+                    // Pass the flattened files to the frontend
+                    'files' => $allFiles,
+
+                    // Link to the main parent folder
+                    'driveUrl' => $mainFolder ? $mainFolder->link : null,
                 ];
             });
 
