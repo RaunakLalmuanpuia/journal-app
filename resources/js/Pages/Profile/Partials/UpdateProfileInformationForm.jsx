@@ -6,7 +6,6 @@ import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 
 export default function UpdateProfileInformation({
-    mustVerifyEmail,
     status,
     className = '',
 }) {
@@ -15,7 +14,7 @@ export default function UpdateProfileInformation({
     const { data, setData, patch, errors, processing, recentlySuccessful } =
         useForm({
             name: user.name,
-            email: user.email,
+            mobile:user.mobile,
         });
 
     const submit = (e) => {
@@ -32,7 +31,7 @@ export default function UpdateProfileInformation({
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-600">
-                    Update your account's profile information and email address.
+                    Update your personal details and contact information.
                 </p>
             </header>
 
@@ -59,38 +58,32 @@ export default function UpdateProfileInformation({
                     <TextInput
                         id="email"
                         type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
+                        className="mt-1 block w-full bg-gray-100"
+                        value={user.email}
+                        readOnly
                     />
-
+                    <p className="mt-1 ml-1 text-sm text-gray-500">
+                        Email cannot be changed.
+                    </p>
                     <InputError className="mt-2" message={errors.email} />
                 </div>
 
-                {mustVerifyEmail && user.email_verified_at === null && (
-                    <div>
-                        <p className="mt-2 text-sm text-gray-800">
-                            Your email address is unverified.
-                            <Link
-                                href={route('verification.send')}
-                                method="post"
-                                as="button"
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            >
-                                Click here to re-send the verification email.
-                            </Link>
-                        </p>
+                <div>
+                    <InputLabel htmlFor="mobile" value="mobile" />
 
-                        {status === 'verification-link-sent' && (
-                            <div className="mt-2 text-sm font-medium text-green-600">
-                                A new verification link has been sent to your
-                                email address.
-                            </div>
-                        )}
-                    </div>
-                )}
+                    <TextInput
+                        id="mobile"
+                        type="tel"
+                        className="mt-1 block w-full"
+                        value={data.mobile}
+                        onChange={(e) => setData('mobile', e.target.value)}
+                        autoComplete="username"
+                    />
+
+                    <InputError className="mt-2" message={errors.mobile} />
+                </div>
+
+
 
                 <div className="flex items-center gap-4">
                     <PrimaryButton disabled={processing}>Save</PrimaryButton>

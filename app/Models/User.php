@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -26,7 +27,9 @@ class User extends Authenticatable
         'email',
         'password',
         'avatar',
-        'google_id'
+        'status',
+        'google_id',
+        'email_verified_at',
     ];
 
     /**
@@ -34,6 +37,9 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+
+    protected $appends = ['last_active_at'];
+
     protected $hidden = [
         'password',
         'remember_token',
@@ -52,6 +58,16 @@ class User extends Authenticatable
         ];
     }
 
+    public function getLastActiveAtAttribute(): ?Carbon
+    {
+        $timestamp = DB::table('sessions')
+            ->where('user_id', $this->id)
+            ->max('last_activity');
+
+        return $timestamp
+            ? Carbon::createFromTimestamp($timestamp)
+            : null;
+    }
     public function plans(): BelongsToMany
     {
         return $this->belongsToMany(Plan::class, 'user_plans')

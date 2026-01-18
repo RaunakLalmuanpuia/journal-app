@@ -57,6 +57,7 @@ class GoogleLoginRequest extends FormRequest
                 'google_id' => $googleUser->id,
                 'avatar' => $googleUser->avatar, // Optional: if you have this column
                 'password' => Hash::make(Str::random(32)), // Secure random password
+                'status' => 'Active',
                 'email_verified_at' => now(),
             ]);
 

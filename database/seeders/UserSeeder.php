@@ -26,6 +26,7 @@ class UserSeeder extends Seeder
                 'name' => 'Admin',
                 'email' => 'admin@mail.com',
                 'mobile' => '9000000001',
+                'status' => 'Active',
                 'password' => Hash::make('password'),
             ],
             [
@@ -33,6 +34,7 @@ class UserSeeder extends Seeder
                 'name' => 'User One',
                 'email' => 'user1@mail.com',
                 'mobile' => '9000000002',
+                'status' => 'Active',
                 'password' => Hash::make('password'),
             ],
             [
@@ -40,6 +42,7 @@ class UserSeeder extends Seeder
                 'name' => 'User Two',
                 'email' => 'user2@mail.com',
                 'mobile' => '9000000003',
+                'status' => 'Active',
                 'password' => Hash::make('password'),
             ],
             [
@@ -47,6 +50,7 @@ class UserSeeder extends Seeder
                 'name' => 'User Three',
                 'email' => 'user3@mail.com',
                 'mobile' => '9000000004',
+                'status' => 'Active',
                 'password' => Hash::make('password'),
             ],
         ], ['id']);
