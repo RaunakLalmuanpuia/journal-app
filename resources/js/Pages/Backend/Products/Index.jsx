@@ -4,13 +4,37 @@ import { Head } from '@inertiajs/react';
 import {
     Star, Users, CheckCircle2, Loader2, BookOpen,
     MessageCircle, Clock, FolderOpen, ExternalLink,LayoutDashboard,
-    Sheet, Eye
+    Sheet, Eye, X, Maximize2, Minimize2
 } from 'lucide-react';
 
+// --- HELPER: Convert Drive URL to Editable Embed URL ---
+// --- HELPER: Convert Drive URL to Embed URL ---
+const getEmbedUrl = (url, type) => {
+    if (!url) return '';
+
+    // CASE 1: If it is a GUIDE, force "preview" mode (Read-Only, no toolbar)
+    if (type === 'guide') {
+        return url.replace(/\/edit.*$/, '/preview').replace(/\/view.*$/, '/preview');
+    }
+
+    // CASE 2: Default (Spreadsheets/Dashboards), force "edit" mode
+    let embedUrl = url;
+    if (url.includes('/view')) embedUrl = url.replace(/\/view.*$/, '/edit');
+    else if (url.includes('/preview')) embedUrl = url.replace(/\/preview.*$/, '/edit');
+    else if (!url.includes('/edit')) embedUrl = `${url}/edit`;
+
+    return embedUrl;
+};
 export default function UserProducts({ auth, activeClaims,roles = [] }) {
 
     // State for the "Guide" modal or logic if needed
     const [userGuideOpen, setUserGuideOpen] = useState(false);
+
+    // --- NEW STATE: Track the currently selected file for the modal ---
+    const [selectedFile, setSelectedFile] = useState(null);
+
+    // --- NEW STATE: Track Full Screen Mode ---
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     // --- NEW ROLE LOGIC (Spatie Compatible) ---
     // Helper to determine the "highest" role for display
@@ -31,6 +55,12 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
             default:
                 return 'bg-gray-100 text-gray-800 border-gray-200';
         }
+    };
+
+    // Helper to close modal and reset states
+    const handleCloseModal = () => {
+        setSelectedFile(null);
+        setIsFullScreen(false); // Reset full screen on close
     };
 
     return (
@@ -90,6 +120,7 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
                                             key={claim.id}
                                             claim={claim}
                                             setUserGuideOpen={setUserGuideOpen}
+                                            onFileSelect={setSelectedFile}
                                         />
                                     ))}
                                 </div>
@@ -99,16 +130,100 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
 
                 </div>
             </div>
+
+            {/* --- FILE PREVIEW / EDIT MODAL --- */}
+            {selectedFile && (
+                <div className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${isFullScreen ? 'p-0' : 'p-4 sm:p-6'}`}>
+
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                        onClick={handleCloseModal}
+                    />
+
+                    {/* Modal Content - DYNAMIC CLASSES for Full Screen */}
+                    <div
+                        className={`relative bg-white shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200
+                        ${isFullScreen
+                            ? 'w-full h-full rounded-none' // Full Screen Styles
+                            : 'w-full max-w-6xl h-[85vh] rounded-xl' // Normal Styles
+                        }`}
+                    >
+
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                            <div className="flex items-center space-x-3 overflow-hidden">
+                                {selectedFile.type === 'dashboard' ? (
+                                    <LayoutDashboard className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                                ) : (
+                                    <Sheet className="w-5 h-5 text-[#0f9d58] flex-shrink-0" />
+                                )}
+                                <h3 className="text-sm font-semibold text-gray-900 truncate max-w-[200px] sm:max-w-md">
+                                    {selectedFile.name}
+                                </h3>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pl-4">
+                                {/* Open in New Tab Button */}
+                                <a
+                                    href={selectedFile.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                                >
+                                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                                    New Tab
+                                </a>
+
+                                <div className="w-px h-4 bg-gray-300 mx-1 hidden sm:block" />
+
+                                {/* NEW: Full Screen Toggle */}
+                                <button
+                                    onClick={() => setIsFullScreen(!isFullScreen)}
+                                    className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                                    title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+                                >
+                                    {isFullScreen ? (
+                                        <Minimize2 className="w-5 h-5" />
+                                    ) : (
+                                        <Maximize2 className="w-5 h-5" />
+                                    )}
+                                </button>
+
+                                {/* Close Button */}
+                                <button
+                                    onClick={handleCloseModal}
+                                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Body (Iframe) */}
+                        <div className="flex-1 bg-gray-100 relative">
+                            <iframe
+                                src={getEmbedUrl(selectedFile.link,selectedFile.type)}
+                                title={selectedFile.name}
+                                className="w-full h-full border-0"
+                                allow="autoplay; clipboard-write; encrypted-media" // Added clipboard-write for sheets
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </UserLayout>
     );
 }
 
 // Extracted Card Component for cleanliness
-function PlanCard({ claim, setUserGuideOpen }) {
+function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
     const isPro = claim.planType === 'pro';
     const isEnterprise = claim.planType === 'enterprise';
     const isFree = claim.planType === 'free';
 
+    // --- 1. DEFINE YOUR GOOGLE DOC LINK HERE ---
+    const GOOGLE_DOC_URL = "https://docs.google.com/document/d/1IwUGpIbV9tf0gmAX5urAP2Jb8S2f55dJ-CivHKLzCeI/edit";
     // Determine status badge color
     const getStatusStyles = (status) => {
         switch(status) {
@@ -175,7 +290,11 @@ function PlanCard({ claim, setUserGuideOpen }) {
                         </div>
                         <div className="flex space-x-2 mt-4 pt-3 border-t border-gray-100">
                             <button
-                                onClick={() => setUserGuideOpen(true)}
+                                onClick={() => onFileSelect({
+                                    name: "Getting Started Guide",
+                                    link: GOOGLE_DOC_URL,
+                                    type: "guide" // We set a specific type to change the icon later
+                                })}
                                 className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white h-9 px-3 w-full"
                             >
                                 <BookOpen className="w-3 h-3 mr-1" />
@@ -217,6 +336,7 @@ function PlanCard({ claim, setUserGuideOpen }) {
 
                 {/* --- PRO PLAN CONTENT --- */}
                 {/* --- PRO PLAN CONTENT (UPDATED) --- */}
+                {/* --- PRO PLAN CONTENT --- */}
                 {isPro && (
                     <div className="flex-1 flex flex-col">
                         <div className="mb-4">
@@ -241,7 +361,6 @@ function PlanCard({ claim, setUserGuideOpen }) {
                             )}
                         </div>
 
-                        {/* Updated to iterate over claim.files instead of claim.resources */}
                         {claim.files && claim.files.length > 0 ? (
                             <div className="space-y-3 flex-1">
                                 <div className="flex items-center justify-between">
@@ -259,24 +378,18 @@ function PlanCard({ claim, setUserGuideOpen }) {
                                     <div className="p-4">
                                         <div className="grid grid-cols-4 gap-3">
                                             {claim.files.slice(0, 8).map((file, index) => {
-                                                // Determine icon based on file type
                                                 const isDashboard = file.type === 'dashboard';
 
                                                 return (
-                                                    <a
+                                                    // --- CHANGED: <a> to <div> with onClick to trigger modal ---
+                                                    <div
                                                         key={file.id || index}
-                                                        href={file.link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                        onClick={() => onFileSelect(file)} // Trigger Modal
                                                         title={file.name}
                                                         className="relative bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#0f9d58] transition-all block group"
                                                     >
-                                                        {/* File Icon Preview */}
                                                         <div className={`aspect-square relative flex items-center justify-center rounded-t-lg transition-colors ${isDashboard ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-green-50 group-hover:bg-green-100'}`}>
-
-                                                            {/* Gradient Overlay */}
                                                             <div className={`absolute inset-0 opacity-50 bg-gradient-to-br ${isDashboard ? 'from-blue-50 to-blue-200' : 'from-green-50 to-green-100'}`} />
-
                                                             <div className="relative z-10">
                                                                 {isDashboard ? (
                                                                     <LayoutDashboard className="w-8 h-8 text-blue-600 drop-shadow-sm" />
@@ -286,18 +399,16 @@ function PlanCard({ claim, setUserGuideOpen }) {
                                                             </div>
                                                         </div>
 
-                                                        {/* File Name */}
                                                         <div className="px-1 py-1 bg-white border-t border-gray-100">
                                                             <p className="text-[10px] font-medium text-gray-700 text-center leading-tight truncate">
                                                                 {file.name}
                                                             </p>
                                                         </div>
-                                                    </a>
+                                                    </div>
                                                 );
                                             })}
                                         </div>
 
-                                        {/* Footer for extra files */}
                                         {claim.files.length > 8 && (
                                             <div className="mt-4 pt-4 border-t border-gray-100">
                                                 <div className="w-full text-xs text-[#0f9d58] flex items-center justify-center py-2 rounded-lg bg-green-50">
@@ -310,7 +421,6 @@ function PlanCard({ claim, setUserGuideOpen }) {
                                 </div>
                             </div>
                         ) : (
-                            // Empty State / Loading Preview
                             claim.driveUrl && (
                                 <div className="space-y-3 flex-1 flex flex-col justify-center">
                                     <div className="text-center py-6">
@@ -324,7 +434,6 @@ function PlanCard({ claim, setUserGuideOpen }) {
                             )
                         )}
 
-                        {/* Action Buttons */}
                         <div className="flex space-x-2 mt-4 pt-3 border-t border-gray-100">
                             {claim.driveUrl && (
                                 <a
