@@ -18,7 +18,7 @@ export default function AdminLayout({ children }) {
         { label: 'Overview', href: '/dashboard' },
         { label: 'Users', href: '/admin/users' },
         { label: 'Blog Posts', href: '/admin/posts' },
-        { label: 'Payments', href: '/admin/payments' },
+        { label: 'Plans', href: '/admin/plans' },
         { label: 'Settings', href: '/admin/settings' },
     ];
 

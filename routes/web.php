@@ -9,7 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GoogleDriveAuthController;
 use App\Http\Controllers\UserPlanController;
-
+use App\Http\Controllers\AdminPlanController;
 
 
 
@@ -66,6 +66,11 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/my-products', [UserPlanController::class, 'index'])->name('products.index');
 
+});
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/plans', [AdminPlanController::class, 'index'])->name('admin.plans.index');
+    Route::get('/users/{user}/plans', [AdminPlanController::class, 'show'])->name('admin.plans.show');
 });
 
 require __DIR__.'/auth.php';
