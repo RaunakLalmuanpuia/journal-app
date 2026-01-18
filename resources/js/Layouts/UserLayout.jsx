@@ -79,7 +79,7 @@ function Sidebar({ isCollapsed, onToggleCollapse, user, roles, currentUrl }) {
             description: 'Overview & stats',
         },
         {
-            href: '/products', // Changed to avoid duplicate keys, adjust as needed
+            href: '/my-products', // Changed to avoid duplicate keys, adjust as needed
             icon: Package,
             label: 'My Products',
             description: 'Tools & resources',

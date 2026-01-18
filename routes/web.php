@@ -8,6 +8,8 @@ use App\Http\Controllers\SocialController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GoogleDriveAuthController;
+use App\Http\Controllers\UserPlanController;
+
 
 
 
@@ -61,5 +63,9 @@ Route::middleware('auth')->group(function () {
 });
 
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/my-products', [UserPlanController::class, 'index'])->name('products.index');
+
+});
 
 require __DIR__.'/auth.php';

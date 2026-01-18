@@ -46,6 +46,11 @@ export default function User() {
     }, [isProvisioning]);
 
 
+    const handleClick = () => {
+        // You can add logic here (e.g., logging, validation)
+        router.get('/my-products');
+    };
+
     return (
         <UserLayout>
             <div className="min-h-screen bg-gray-50 font-sans text-gray-900 relative">
@@ -80,7 +85,7 @@ export default function User() {
                                     Available Plans
                                 </h2>
 
-                                <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors">
+                                <button onClick={handleClick} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors">
                                     My Products
                                     <ArrowRight className="w-4 h-4 ml-2" />
                                 </button>
