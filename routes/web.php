@@ -70,7 +70,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/plans', [AdminPlanController::class, 'index'])->name('admin.plans.index');
-    Route::get('/users/{user}/plans', [AdminPlanController::class, 'show'])->name('admin.plans.show');
+    Route::get('/{user}/plans', [AdminPlanController::class, 'show'])->name('admin.plans.show');
 });
 
 

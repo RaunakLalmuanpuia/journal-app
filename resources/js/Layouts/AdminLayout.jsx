@@ -23,9 +23,23 @@ export default function AdminLayout({ children }) {
     ];
 
     // Helper to check if a tab is active (with safety check)
-    const isActive = (path) => {
-        if (!url) return false;
-        return url.startsWith(path);
+    // Universal helper to check if a tab is active
+    const isTabActive = (currentUrl, tabUrl) => {
+        if (!currentUrl) return false;
+
+        // 1. Exact Match (Home/Dashboard usually require this)
+        if (currentUrl === tabUrl) return true;
+        if (tabUrl === '/') return currentUrl === '/'; // Strict for root
+
+        // 2. Strip IDs (numbers, UUIDs) to compare structure
+        // This effectively turns "/admin/123/plans" into "/admin//plans"
+        // and "/admin/plans" into "/admin/plans"
+        const cleanCurrent = currentUrl.replace(/\/[0-9a-fA-F-]{4,}/g, '').replace(/\/\d+/g, '');
+        const cleanTab = tabUrl.replace(/\/[0-9a-fA-F-]{4,}/g, '').replace(/\/\d+/g, '');
+
+        // 3. Check if the clean current URL starts with the clean tab URL
+        // We use startsWith to allow sub-pages (e.g., /admin/plans/create)
+        return cleanCurrent.startsWith(cleanTab);
     };
 
     return (
@@ -84,7 +98,7 @@ export default function AdminLayout({ children }) {
                 <div className="mb-8">
                     <div className="bg-gray-100 p-1 rounded-lg w-full grid grid-cols-2 md:grid-cols-5 gap-1">
                         {navItems.map((item) => {
-                            const active = isActive(item.href);
+                            const active = isTabActive(url, item.href);
                             return (
                                 <Link
                                     key={item.label}
