@@ -64,7 +64,7 @@ export default function Footer() {
                         <h4 className="text-lg font-semibold mb-4 text-white">Support</h4>
                         <ul className="space-y-3 text-sm">
                             <li>
-                                <Link href="/contact-us" className="text-gray-400 hover:text-white transition-colors">
+                                <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
                                     Contact Us
                                 </Link>
                             </li>
@@ -75,7 +75,7 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href={route('register')} className="text-gray-400 hover:text-white transition-colors">
+                                <Link href={route('login')} className="text-gray-400 hover:text-white transition-colors">
                                     Sign Up
                                 </Link>
                             </li>
@@ -87,17 +87,17 @@ export default function Footer() {
                         <h4 className="text-lg font-semibold mb-4 text-white">Legal</h4>
                         <ul className="space-y-3 text-sm">
                             <li>
-                                <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">
+                                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                                     Privacy Policy
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/terms-conditions" className="text-gray-400 hover:text-white transition-colors">
+                                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
                                     Terms & Conditions
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/cancellation-refund" className="text-gray-400 hover:text-white transition-colors">
+                                <Link href="/cancellation" className="text-gray-400 hover:text-white transition-colors">
                                     Cancellation & Refund
                                 </Link>
                             </li>

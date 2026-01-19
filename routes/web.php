@@ -26,11 +26,9 @@ Route::get('/', function () {
 Route::get('/demo', function () {
     return Inertia::render('Frontend/Demo/Index', []);
 });
-
 Route::get('/free-plan', function () {
     return Inertia::render('Frontend/FreePlan/Index', []);
 });
-
 Route::get('/paid-plan', function () {
     return Inertia::render('Frontend/PaidPlan/Index', []);
 });
@@ -79,4 +77,26 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
     Route::patch('/users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
 });
+
+Route::get('/contact', function () {
+    return Inertia::render('Frontend/Contact',[]);
+})->name('contact');
+
+
+Route::get('/privacy', function () {
+    return Inertia::render('Frontend/Privacy',[]);
+})->name('privacy');
+
+Route::get('/terms', function () {
+    return Inertia::render('Frontend/Terms',[]);
+})->name('terms');
+
+Route::get('/cancellation', function () {
+    return Inertia::render('Frontend/CancellationRefund',[]);
+})->name('cancellation');
+
+Route::get('/shipping-delivery', function () {
+    return Inertia::render('Frontend/ShippingDelivery',[]);
+})->name('shipping-delivery');
+
 require __DIR__.'/auth.php';
