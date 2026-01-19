@@ -3,21 +3,25 @@ import UserLayout from '@/Layouts/UserLayout.jsx';
 import { Head } from '@inertiajs/react';
 import {
     Star, Users, CheckCircle2, Loader2, BookOpen,
-    MessageCircle, Clock, FolderOpen, ExternalLink,LayoutDashboard,
-    Sheet, Eye, X, Maximize2, Minimize2
+    MessageCircle, Clock, FolderOpen, ExternalLink, LayoutDashboard,
+    Sheet, Eye, X, Maximize2, Minimize2,
+    // --- NEW IMPORTS ---
+    FileText,       // For Google Docs
+    Presentation,   // For Google Slides
+    FileQuestion,   // For Google Forms
+    File as FileGeneric // Fallback
 } from 'lucide-react';
 
-// --- HELPER: Convert Drive URL to Editable Embed URL ---
 // --- HELPER: Convert Drive URL to Embed URL ---
 const getEmbedUrl = (url, type) => {
     if (!url) return '';
 
-    // CASE 1: If it is a GUIDE, force "preview" mode (Read-Only, no toolbar)
+    // CASE 1: If it is a GUIDE, force "preview" mode
     if (type === 'guide') {
         return url.replace(/\/edit.*$/, '/preview').replace(/\/view.*$/, '/preview');
     }
 
-    // CASE 2: Default (Spreadsheets/Dashboards), force "edit" mode
+    // CASE 2: Default, force "edit" mode
     let embedUrl = url;
     if (url.includes('/view')) embedUrl = url.replace(/\/view.*$/, '/edit');
     else if (url.includes('/preview')) embedUrl = url.replace(/\/preview.*$/, '/edit');
@@ -25,22 +29,86 @@ const getEmbedUrl = (url, type) => {
 
     return embedUrl;
 };
-export default function UserProducts({ auth, activeClaims,roles = [] }) {
 
-    // State for the "Guide" modal or logic if needed
+// --- NEW HELPER: Get Icon and Colors based on File Type ---
+const getFileConfig = (file) => {
+    // Normalize type string (handle 'application/vnd...' or simple 'sheet')
+    const type = (file.type || file.mime_type || '').toLowerCase();
+
+    // 1. DASHBOARDS
+    if (type === 'dashboard') {
+        return {
+            Icon: LayoutDashboard,
+            color: 'text-indigo-600',
+            bg: 'bg-indigo-50',
+            hoverBg: 'group-hover:bg-indigo-100',
+            gradient: 'from-indigo-50 to-indigo-200'
+        };
+    }
+
+    // 2. GOOGLE SHEETS
+    if (type.includes('sheet') || type.includes('spreadsheet')) {
+        return {
+            Icon: Sheet,
+            color: 'text-[#0f9d58]', // Google Sheets Green
+            bg: 'bg-green-50',
+            hoverBg: 'group-hover:bg-green-100',
+            gradient: 'from-green-50 to-green-200'
+        };
+    }
+
+    // 3. GOOGLE DOCS
+    if (type.includes('doc') || type.includes('document')) {
+        return {
+            Icon: FileText,
+            color: 'text-[#4285f4]', // Google Docs Blue
+            bg: 'bg-blue-50',
+            hoverBg: 'group-hover:bg-blue-100',
+            gradient: 'from-blue-50 to-blue-200'
+        };
+    }
+
+    // 4. GOOGLE SLIDES
+    if (type.includes('slide') || type.includes('presentation')) {
+        return {
+            Icon: Presentation,
+            color: 'text-[#f4b400]', // Google Slides Yellow/Orange
+            bg: 'bg-yellow-50',
+            hoverBg: 'group-hover:bg-yellow-100',
+            gradient: 'from-yellow-50 to-yellow-200'
+        };
+    }
+
+    // 5. GOOGLE FORMS
+    if (type.includes('form')) {
+        return {
+            Icon: FileQuestion,
+            color: 'text-[#7248b9]', // Google Forms Purple
+            bg: 'bg-purple-50',
+            hoverBg: 'group-hover:bg-purple-100',
+            gradient: 'from-purple-50 to-purple-200'
+        };
+    }
+
+    // DEFAULT / FALLBACK
+    return {
+        Icon: FileGeneric,
+        color: 'text-gray-600',
+        bg: 'bg-gray-50',
+        hoverBg: 'group-hover:bg-gray-100',
+        gradient: 'from-gray-50 to-gray-200'
+    };
+};
+
+export default function UserProducts({ auth, activeClaims, roles = [] }) {
+
     const [userGuideOpen, setUserGuideOpen] = useState(false);
-
-    // --- NEW STATE: Track the currently selected file for the modal ---
     const [selectedFile, setSelectedFile] = useState(null);
-
-    // --- NEW STATE: Track Full Screen Mode ---
     const [isFullScreen, setIsFullScreen] = useState(false);
 
-    // --- NEW ROLE LOGIC (Spatie Compatible) ---
-    // Helper to determine the "highest" role for display
     const getDisplayRole = () => {
         if (roles.includes('Admin')) return 'Admin';
-        if (roles.includes('User')) return 'User'; // adjust 'premium' to match your actual role name
+        if (roles.includes('User')) return 'User';
         return 'User';
     };
 
@@ -48,41 +116,38 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
 
     const getAccessLevelColor = (role) => {
         switch (role) {
-            case 'Admin':
-                return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'User':
-                return 'bg-amber-100 text-amber-800 border-amber-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'Admin': return 'bg-purple-100 text-purple-800 border-purple-200';
+            case 'User': return 'bg-amber-100 text-amber-800 border-amber-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
-    // Helper to close modal and reset states
     const handleCloseModal = () => {
         setSelectedFile(null);
-        setIsFullScreen(false); // Reset full screen on close
+        setIsFullScreen(false);
     };
+
+    // --- Prepare Modal Icon Logic ---
+    // If a file is selected, get its config to render the correct icon in the Modal Header
+    const modalFileConfig = selectedFile ? getFileConfig(selectedFile) : null;
+    const ModalIcon = modalFileConfig ? modalFileConfig.Icon : null;
 
     return (
         <UserLayout
             user={auth.user}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">My Products</h2>}
         >
-
             <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="py-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-2xl font-light text-gray-900">
-                                    My Products
-                                </h1>
+                                <h1 className="text-2xl font-light text-gray-900">My Products</h1>
                                 <p className="text-gray-500 mt-1 font-light text-sm">
                                     Manage and access your available tools and resources
                                 </p>
                             </div>
                             <div className="flex items-center space-x-3">
-                                {/* Dynamic Badge based on Spatie Roles */}
                                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize transition-colors focus:outline-none ${getAccessLevelColor(currentRole)}`}>
                                     {currentRole} Access
                                 </span>
@@ -94,16 +159,12 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-
                     <section className="space-y-6">
-                        {/* Header Section */}
                         <div className="space-y-8">
                             <div>
                                 <div className="flex items-start justify-between mb-6">
                                     <div>
-                                        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                                            My Claimed Plans
-                                        </h2>
+                                        <h2 className="text-2xl font-semibold text-gray-900 mb-2">My Claimed Plans</h2>
                                         <p className="text-gray-600 text-sm">
                                             Your active plan subscriptions with Google Drive resources
                                         </p>
@@ -113,7 +174,6 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
                                     </span>
                                 </div>
 
-                                {/* Grid of Plans */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                     {activeClaims.map((claim) => (
                                         <PlanCard
@@ -127,44 +187,30 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
                             </div>
                         </div>
                     </section>
-
                 </div>
             </div>
 
             {/* --- FILE PREVIEW / EDIT MODAL --- */}
-            {selectedFile && (
+            {selectedFile && modalFileConfig && (
                 <div className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${isFullScreen ? 'p-0' : 'p-4 sm:p-6'}`}>
-
-                    {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
                         onClick={handleCloseModal}
                     />
 
-                    {/* Modal Content - DYNAMIC CLASSES for Full Screen */}
-                    <div
-                        className={`relative bg-white shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200
-                        ${isFullScreen
-                            ? 'w-full h-full rounded-none' // Full Screen Styles
-                            : 'w-full max-w-6xl h-[85vh] rounded-xl' // Normal Styles
-                        }`}
-                    >
+                    <div className={`relative bg-white shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${isFullScreen ? 'w-full h-full rounded-none' : 'w-full max-w-6xl h-[85vh] rounded-xl'}`}>
 
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                             <div className="flex items-center space-x-3 overflow-hidden">
-                                {selectedFile.type === 'dashboard' ? (
-                                    <LayoutDashboard className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                                ) : (
-                                    <Sheet className="w-5 h-5 text-[#0f9d58] flex-shrink-0" />
-                                )}
+                                {/* DYNAMIC MODAL ICON */}
+                                <ModalIcon className={`w-5 h-5 flex-shrink-0 ${modalFileConfig.color}`} />
                                 <h3 className="text-sm font-semibold text-gray-900 truncate max-w-[200px] sm:max-w-md">
                                     {selectedFile.name}
                                 </h3>
                             </div>
 
                             <div className="flex items-center space-x-2 pl-4">
-                                {/* Open in New Tab Button */}
                                 <a
                                     href={selectedFile.link}
                                     target="_blank"
@@ -174,23 +220,14 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
                                     <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
                                     New Tab
                                 </a>
-
                                 <div className="w-px h-4 bg-gray-300 mx-1 hidden sm:block" />
-
-                                {/* NEW: Full Screen Toggle */}
                                 <button
                                     onClick={() => setIsFullScreen(!isFullScreen)}
                                     className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
                                     title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
                                 >
-                                    {isFullScreen ? (
-                                        <Minimize2 className="w-5 h-5" />
-                                    ) : (
-                                        <Maximize2 className="w-5 h-5" />
-                                    )}
+                                    {isFullScreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
                                 </button>
-
-                                {/* Close Button */}
                                 <button
                                     onClick={handleCloseModal}
                                     className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
@@ -200,13 +237,12 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
                             </div>
                         </div>
 
-                        {/* Modal Body (Iframe) */}
                         <div className="flex-1 bg-gray-100 relative">
                             <iframe
-                                src={getEmbedUrl(selectedFile.link,selectedFile.type)}
+                                src={getEmbedUrl(selectedFile.link, selectedFile.type)}
                                 title={selectedFile.name}
                                 className="w-full h-full border-0"
-                                allow="autoplay; clipboard-write; encrypted-media" // Added clipboard-write for sheets
+                                allow="autoplay; clipboard-write; encrypted-media"
                             />
                         </div>
                     </div>
@@ -216,17 +252,14 @@ export default function UserProducts({ auth, activeClaims,roles = [] }) {
     );
 }
 
-// Extracted Card Component for cleanliness
-function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
+function PlanCard({ claim, setUserGuideOpen, onFileSelect }) {
     const isPro = claim.planType === 'pro';
     const isEnterprise = claim.planType === 'enterprise';
     const isFree = claim.planType === 'free';
-
-    // --- 1. DEFINE YOUR GOOGLE DOC LINK HERE ---
     const GOOGLE_DOC_URL = "https://docs.google.com/document/d/1IwUGpIbV9tf0gmAX5urAP2Jb8S2f55dJ-CivHKLzCeI/edit";
-    // Determine status badge color
+
     const getStatusStyles = (status) => {
-        switch(status) {
+        switch (status) {
             case 'claimed': return 'bg-blue-100 text-blue-800';
             case 'active': return 'bg-green-100 text-green-800';
             case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -237,8 +270,6 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
 
     return (
         <div className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white flex flex-col h-full">
-
-            {/* Card Header */}
             <div className="p-4 sm:p-6 pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
@@ -248,12 +279,8 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                             {isFree && <CheckCircle2 className="w-5 h-5 text-[#12b5e2]" />}
                         </div>
                         <div>
-                            <h3 className="font-medium text-gray-900 capitalize">
-                                {claim.name}
-                            </h3>
-                            <p className="text-xs text-gray-500">
-                                Claimed {claim.claimedAt}
-                            </p>
+                            <h3 className="font-medium text-gray-900 capitalize">{claim.name}</h3>
+                            <p className="text-xs text-gray-500">Claimed {claim.claimedAt}</p>
                         </div>
                     </div>
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${getStatusStyles(claim.status)}`}>
@@ -269,10 +296,7 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                 </div>
             </div>
 
-            {/* Card Content */}
             <div className="p-4 sm:p-6 pt-0 flex-1 flex flex-col">
-
-                {/* --- FREE PLAN CONTENT --- */}
                 {isFree && (
                     <div className="space-y-4 flex-1 flex flex-col justify-between">
                         <div>
@@ -283,19 +307,13 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                             <div className="text-center py-6">
                                 <BookOpen className="w-12 h-12 text-green-600 mx-auto mb-3" />
                                 <h4 className="text-sm font-medium text-gray-900 mb-1">Documentation & Guide</h4>
-                                <p className="text-xs text-gray-500 mb-4">
-                                    Access your free plan documentation and getting started guide
-                                </p>
+                                <p className="text-xs text-gray-500 mb-4">Access your free plan documentation and getting started guide</p>
                             </div>
                         </div>
                         <div className="flex space-x-2 mt-4 pt-3 border-t border-gray-100">
                             <button
-                                onClick={() => onFileSelect({
-                                    name: "Getting Started Guide",
-                                    link: GOOGLE_DOC_URL,
-                                    type: "guide" // We set a specific type to change the icon later
-                                })}
-                                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white h-9 px-3 w-full"
+                                onClick={() => onFileSelect({ name: "Getting Started Guide", link: GOOGLE_DOC_URL, type: "guide" })}
+                                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-[#12b5e2] hover:bg-[#0ea5d3] text-white h-9 px-3 w-full"
                             >
                                 <BookOpen className="w-3 h-3 mr-1" />
                                 Open Guide
@@ -304,7 +322,6 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                     </div>
                 )}
 
-                {/* --- ENTERPRISE PLAN CONTENT --- */}
                 {isEnterprise && (
                     <div className="space-y-4 flex-1 flex flex-col justify-between">
                         <div>
@@ -315,9 +332,7 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                             <div className="text-center py-6">
                                 <MessageCircle className="w-12 h-12 text-[#12b5e2] mx-auto mb-3" />
                                 <h4 className="text-sm font-medium text-gray-900 mb-1">Waiting for Admin Response</h4>
-                                <p className="text-xs text-gray-500 mb-4">
-                                    KeytagJournal Admin will contact you soon with custom enterprise solution details
-                                </p>
+                                <p className="text-xs text-gray-500 mb-4">KeytagJournal Admin will contact you soon with custom enterprise solution details</p>
                             </div>
                             <div className="bg-[#12b5e2] bg-opacity-5 border border-[#12b5e2] border-opacity-20 rounded-lg p-3">
                                 <div className="flex items-center space-x-2 mb-2">
@@ -334,9 +349,6 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                     </div>
                 )}
 
-                {/* --- PRO PLAN CONTENT --- */}
-                {/* --- PRO PLAN CONTENT (UPDATED) --- */}
-                {/* --- PRO PLAN CONTENT --- */}
                 {isPro && (
                     <div className="flex-1 flex flex-col">
                         <div className="mb-4">
@@ -378,24 +390,21 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                                     <div className="p-4">
                                         <div className="grid grid-cols-4 gap-3">
                                             {claim.files.slice(0, 8).map((file, index) => {
-                                                const isDashboard = file.type === 'dashboard';
+                                                // --- DYNAMIC VISUALS BASED ON TYPE ---
+                                                const { Icon, color, bg, hoverBg, gradient } = getFileConfig(file);
 
                                                 return (
-                                                    // --- CHANGED: <a> to <div> with onClick to trigger modal ---
                                                     <div
                                                         key={file.id || index}
-                                                        onClick={() => onFileSelect(file)} // Trigger Modal
+                                                        onClick={() => onFileSelect(file)}
                                                         title={file.name}
                                                         className="relative bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-[#0f9d58] transition-all block group"
                                                     >
-                                                        <div className={`aspect-square relative flex items-center justify-center rounded-t-lg transition-colors ${isDashboard ? 'bg-blue-50 group-hover:bg-blue-100' : 'bg-green-50 group-hover:bg-green-100'}`}>
-                                                            <div className={`absolute inset-0 opacity-50 bg-gradient-to-br ${isDashboard ? 'from-blue-50 to-blue-200' : 'from-green-50 to-green-100'}`} />
+                                                        {/* Dynamic Background and Icon */}
+                                                        <div className={`aspect-square relative flex items-center justify-center rounded-t-lg transition-colors ${bg} ${hoverBg}`}>
+                                                            <div className={`absolute inset-0 opacity-50 bg-gradient-to-br ${gradient}`} />
                                                             <div className="relative z-10">
-                                                                {isDashboard ? (
-                                                                    <LayoutDashboard className="w-8 h-8 text-blue-600 drop-shadow-sm" />
-                                                                ) : (
-                                                                    <Sheet className="w-8 h-8 text-[#0f9d58] drop-shadow-sm" />
-                                                                )}
+                                                                <Icon className={`w-8 h-8 drop-shadow-sm ${color}`} />
                                                             </div>
                                                         </div>
 
@@ -408,7 +417,6 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                                                 );
                                             })}
                                         </div>
-
                                         {claim.files.length > 8 && (
                                             <div className="mt-4 pt-4 border-t border-gray-100">
                                                 <div className="w-full text-xs text-[#0f9d58] flex items-center justify-center py-2 rounded-lg bg-green-50">
@@ -426,9 +434,7 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                                     <div className="text-center py-6">
                                         <FolderOpen className="w-12 h-12 text-[#12b5e2] mx-auto mb-3" />
                                         <h4 className="text-sm font-medium text-gray-900 mb-1">Google Drive Ready</h4>
-                                        <p className="text-xs text-gray-500 mb-4">
-                                            Your {claim.planType} plan resources are ready to access
-                                        </p>
+                                        <p className="text-xs text-gray-500 mb-4">Your {claim.planType} plan resources are ready to access</p>
                                     </div>
                                 </div>
                             )
@@ -440,7 +446,7 @@ function PlanCard({ claim, setUserGuideOpen,onFileSelect }) {
                                     href={claim.driveUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-[#12b5e2] hover:bg-[#0ea5d4] text-white flex-1 h-9 px-3"
+                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-[#12b5e2] hover:bg-[#0ea5d4] text-white flex-1 h-9 px-3"
                                 >
                                     <ExternalLink className="w-3 h-3 mr-1" />
                                     Open Drive

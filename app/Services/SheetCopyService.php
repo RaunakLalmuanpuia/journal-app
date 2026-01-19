@@ -238,7 +238,7 @@ class SheetCopyService
                     // CATEGORIZE & ASSIGN TYPE
                     // ---------------------------------------------------
 
-                    $type = 'file'; // Default for PDF/Images/Docs
+                    $type = 'docs'; // Default for PDF/Images/Docs
                     $isSheet = ($createdFile->mimeType === 'application/vnd.google-apps.spreadsheet');
 
                     if ($isSheet) {
