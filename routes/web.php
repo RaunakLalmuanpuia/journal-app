@@ -10,7 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GoogleDriveAuthController;
 use App\Http\Controllers\UserPlanController;
 use App\Http\Controllers\AdminPlanController;
-
+use App\Http\Controllers\UserController;
 
 
 Route::get('/', function () {
@@ -73,4 +73,10 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/users/{user}/plans', [AdminPlanController::class, 'show'])->name('admin.plans.show');
 });
 
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
+    Route::patch('/users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
+});
 require __DIR__.'/auth.php';

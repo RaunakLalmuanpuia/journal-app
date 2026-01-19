@@ -47,26 +47,40 @@ export default function Index({ auth, subscriptions, filters, plan_types }) {
                         <div className="p-6 text-gray-900">
 
                             {/* Filters */}
-                            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                                 <h3 className="text-lg font-medium">Subscription List</h3>
-                                <div className="flex gap-2 w-full md:w-auto">
-                                    <select
-                                        className="border-gray-300 rounded-md shadow-sm capitalize"
-                                        value={params.type}
-                                        onChange={onTypeChange}
+
+                                {/* Wrapper for Inputs + Clear Link */}
+                                <div className="flex flex-col items-end w-full md:w-auto gap-2">
+
+                                    {/* Inputs Row */}
+                                    <div className="flex gap-2 w-full md:w-auto">
+                                        <select
+                                            className="border-gray-300 rounded-md shadow-sm capitalize"
+                                            value={params.type}
+                                            onChange={onTypeChange}
+                                        >
+                                            <option value="">All Plans</option>
+                                            {plan_types.map((type) => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            type="text"
+                                            placeholder="Search user..."
+                                            className="border-gray-300 rounded-md shadow-sm w-full md:w-64"
+                                            value={params.search}
+                                            onChange={onSearchChange}
+                                        />
+                                    </div>
+
+                                    {/* Clear Filters Link - Placed Below */}
+                                    <Link
+                                        href={route('admin.plans.index')}
+                                        className="text-xs text-gray-500 hover:text-gray-800 underline"
                                     >
-                                        <option value="">All Plans</option>
-                                        {plan_types.map((type) => (
-                                            <option key={type} value={type}>{type}</option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="text"
-                                        placeholder="Search user..."
-                                        className="border-gray-300 rounded-md shadow-sm w-full md:w-64"
-                                        value={params.search}
-                                        onChange={onSearchChange}
-                                    />
+                                        Clear Filters
+                                    </Link>
                                 </div>
                             </div>
 

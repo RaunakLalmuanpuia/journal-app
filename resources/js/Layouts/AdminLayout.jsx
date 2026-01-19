@@ -16,9 +16,9 @@ export default function AdminLayout({ children }) {
     // Navigation Tabs Configuration
     const navItems = [
         { label: 'Overview', href: '/dashboard' },
+        { label: 'Plans', href: '/admin/plans' },
         { label: 'Users', href: '/admin/users' },
         { label: 'Blog Posts', href: '/admin/posts' },
-        { label: 'Plans', href: '/admin/plans' },
         { label: 'Settings', href: '/admin/settings' },
     ];
 
