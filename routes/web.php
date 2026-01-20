@@ -13,6 +13,9 @@ use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\SupportTicketController;
+
+
 
 Route::get('/', function () {
     return Inertia::render('Frontend/Home/Index', [
@@ -112,4 +115,9 @@ Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/internal/latest-posts', [BlogController::class, 'getLatestPostsJson'])
     ->name('internal.posts.latest');
 
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/help-support', [SupportTicketController::class, 'index'])->name('support.index');
+    Route::post('/help-support', [SupportTicketController::class, 'store'])->name('support.store');
+});
 require __DIR__.'/auth.php';

@@ -100,7 +100,7 @@ function Sidebar({ isCollapsed, onToggleCollapse, user, roles, currentUrl }) {
             description: 'Main website',
         },
         {
-            href: '/support',
+            href: '/help-support',
             icon: HelpCircle,
             label: 'Help & Support',
             description: 'Get assistance',

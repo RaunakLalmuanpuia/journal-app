@@ -102,4 +102,9 @@ class User extends Authenticatable
             });
     }
 
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
 }
