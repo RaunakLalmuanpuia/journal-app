@@ -5,17 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
+
 class BlogController extends Controller
 {
-    //
     public function index(Request $request)
     {
+        // 1. Add ->with('author') here
         $query = Post::query()
+            ->with(['author:id,name,avatar'])
             ->where('status', 'published')
             ->orderBy('published_at', 'desc');
 
-        // Search functionality
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('title', 'like', "%{$request->search}%")
@@ -24,7 +24,6 @@ class BlogController extends Controller
             });
         }
 
-        // Pagination (9 posts per page)
         $posts = $query->paginate(9)->withQueryString();
 
         return Inertia::render('Frontend/Blog/Index', [
@@ -35,31 +34,32 @@ class BlogController extends Controller
 
     public function show($id)
     {
+        // 2. Add ->with('author') here too (for the single post page)
         $post = Post::query()
+            ->with(['author:id,name,avatar'])
             ->where('id', $id)
             ->where('status', 'published')
             ->firstOrFail();
 
-        // Increment Views (Atomic operation)
         $post->increment('views');
 
         return Inertia::render('Frontend/Blog/Show', [
             'post' => $post,
-            // Calculate read time roughly on server side or pass raw body
             'readTime' => ceil(str_word_count(strip_tags($post->content)) / 200),
         ]);
     }
 
     public function getLatestPostsJson()
     {
+        // 3. Add ->with('author') here for your API/Widget
         $posts = Post::query()
+            ->with(['author:id,name,avatar'])
             ->where('status', 'published')
             ->latest()
             ->take(request('limit', 5))
             ->get();
 
-        // Optional: Transform image path if your DB only stores "posts/image.jpg"
-        // and your component expects a full URL.
+        // Transform image path logic
         $posts->transform(function ($post) {
             if ($post->featured_image && !str_starts_with($post->featured_image, 'http')) {
                 $post->featured_image = '/storage/' . $post->featured_image;
@@ -72,5 +72,4 @@ class BlogController extends Controller
             'data' => $posts
         ]);
     }
-
 }

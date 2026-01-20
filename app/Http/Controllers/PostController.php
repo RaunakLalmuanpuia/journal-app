@@ -22,6 +22,9 @@ class PostController extends Controller
         $data = $this->validatePost($request);
         $data = $this->handleImageUpload($request, $data);
 
+        // Assign the currently authenticated user's ID
+        $data['user_id'] = auth()->id();
+
         Post::create($data);
 
         return redirect()->back();
