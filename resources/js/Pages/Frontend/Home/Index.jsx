@@ -6,6 +6,7 @@ import Process from './Partials/Process.jsx';
 import Video from './Partials/Video.jsx';
 import Plans from './Partials/Plans.jsx';
 import Visualize from './Partials/Visualize.jsx';
+import LatestBlogPosts from '@/Components/Commons/LatestBlogPosts';
 // import Tags from './Partials/Tags.jsx';
 
 
@@ -35,6 +36,8 @@ export default function Home({ auth, laravelVersion, phpVersion }) {
 
                 {/* Data Visualization or Graphics */}
                 <Visualize />
+
+                <LatestBlogPosts/>
 
 
 

@@ -80,7 +80,7 @@ export default function NavBar({ className = '' }) {
                                     { name: 'Free Plan', href: '/free-plan' },
                                     { name: 'Pro Plan', href: '/paid-plan' },
                                     { name: 'Story', href: '/story' },
-                                    { name: 'Blog', href: '/' },
+                                    { name: 'Blog', href: '/blog' },
                                 ].map((item) => (
                                     <Link key={item.name} href={item.href}>
                                         <button

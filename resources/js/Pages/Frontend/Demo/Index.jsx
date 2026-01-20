@@ -4,6 +4,7 @@ import { Head } from "@inertiajs/react";
 import Hero from "./Partials/Hero";
 import Features from "./Partials/Features";
 import Video from "./Partials/Video";
+import LatestBlogPosts from '@/Components/Commons/LatestBlogPosts';
 export default function Demo() {
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
@@ -103,6 +104,7 @@ export default function Demo() {
                     </div>
                 )}
             </div>
+            <LatestBlogPosts/>
         </GuestLayout>
     );
 }

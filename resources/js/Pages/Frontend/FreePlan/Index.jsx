@@ -6,7 +6,7 @@ import { Head } from '@inertiajs/react';
 import Guide from './Partials/Guide';
 import Video from './Partials/Video';
 import Download from './Partials/Download';
-
+import LatestBlogPosts from '@/Components/Commons/LatestBlogPosts';
 export default function Index() {
     return (
         <GuestLayout>
@@ -21,6 +21,8 @@ export default function Index() {
 
                 {/* 3. Download / Pricing Card Section */}
                 <Download />
+
+                <LatestBlogPosts />
             </div>
         </GuestLayout>
     );

@@ -5,6 +5,7 @@ import { Head } from '@inertiajs/react';
 // Import Partials
 import { StoryList } from './Partials/StoryList';
 import { MusicQuote } from './Partials/MusicQuote';
+import LatestBlogPosts from "@/Components/Commons/LatestBlogPosts";
 
 export default function Index() {
     return (
@@ -17,6 +18,8 @@ export default function Index() {
 
                 {/* 2. Footer Quote Section */}
                 <MusicQuote />
+
+                <LatestBlogPosts/>
             </div>
         </GuestLayout>
     );

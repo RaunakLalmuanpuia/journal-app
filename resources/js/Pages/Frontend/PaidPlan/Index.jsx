@@ -5,7 +5,7 @@ import { Head } from '@inertiajs/react';
 // Import Partials
 import { Plan } from './Partials/Plan';
 import { Benefits } from './Partials/Benefits';
-
+import LatestBlogPosts from '@/Components/Commons/LatestBlogPosts';
 export default function Index() {
     return (
         <GuestLayout>
@@ -17,6 +17,8 @@ export default function Index() {
 
                 {/* 2. Benefits Grid Section */}
                 <Benefits />
+
+                <LatestBlogPosts/>
             </div>
         </GuestLayout>
     );

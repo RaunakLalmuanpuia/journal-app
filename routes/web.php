@@ -108,4 +108,8 @@ Route::get('/shipping-delivery', function () {
 // Public Blog Routes
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
+
+Route::get('/internal/latest-posts', [BlogController::class, 'getLatestPostsJson'])
+    ->name('internal.posts.latest');
+
 require __DIR__.'/auth.php';

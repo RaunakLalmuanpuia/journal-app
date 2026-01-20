@@ -50,4 +50,27 @@ class BlogController extends Controller
         ]);
     }
 
+    public function getLatestPostsJson()
+    {
+        $posts = Post::query()
+            ->where('status', 'published')
+            ->latest()
+            ->take(request('limit', 5))
+            ->get();
+
+        // Optional: Transform image path if your DB only stores "posts/image.jpg"
+        // and your component expects a full URL.
+        $posts->transform(function ($post) {
+            if ($post->featured_image && !str_starts_with($post->featured_image, 'http')) {
+                $post->featured_image = '/storage/' . $post->featured_image;
+            }
+            return $post;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $posts
+        ]);
+    }
+
 }
