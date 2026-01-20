@@ -1,19 +1,43 @@
 import React from "react";
-import { Head, Link } from "@inertiajs/react";
-import { ArrowLeft, Calendar, Clock, Eye, User, Share2, Facebook, Twitter, Linkedin } from "lucide-react";
-import { motion } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
+import {Head, Link} from "@inertiajs/react";
+import {
+    ArrowLeft,
+    Calendar,
+    Clock,
+    Eye,
+    User,
+    Share2,
+    Heart
+} from "lucide-react";
+import {motion} from "framer-motion";
+import {formatDistanceToNow} from "date-fns";
 import GuestLayout from "@/Layouts/GuestLayout";
 
-// Helper to sanitize HTML for the Text Blocks
-const sanitizeHtml = (html) => {
-    // In a real app, use DOMPurify here.
-    // Since this comes from your Admin panel (trusted source), this is acceptable.
-    return { __html: html };
-};
+// 1. Robust Sanitization Logic from Source
+function sanitizeParagraph(html) {
+    try {
+        if (!html) return "";
+        // Remove scripts and styles
+        html = html.replace(
+            /<(script|style)[^>]*>[\s\S]*?<\/(script|style)>/gi,
+            ""
+        );
+        // Allowed tags
+        const allowed = [
+            "p", "br", "b", "strong", "i", "em", "u", "ul", "ol", "li",
+            "span", "blockquote", "code", "pre", "h1", "h2", "h3", "h4", "h5", "h6",
+        ];
+        // Strip unknown tags
+        return html.replace(/<([^>]+)>/g, (match, tag) => {
+            const name = tag.split(" ")[0].replace(/\//g, "").toLowerCase();
+            return allowed.includes(name) ? match : "";
+        });
+    } catch {
+        return html;
+    }
+}
 
-export default function BlogShow({ post, readTime }) {
-
+export default function BlogShow({post, readTime}) {
     const handleShare = async () => {
         if (navigator.share) {
             try {
@@ -23,157 +47,213 @@ export default function BlogShow({ post, readTime }) {
                     url: window.location.href,
                 });
             } catch (err) {
-                console.log('Error sharing:', err);
+                console.log("Error sharing:", err);
             }
         } else {
-            // Fallback: Copy to clipboard
             navigator.clipboard.writeText(window.location.href);
             alert("Link copied to clipboard!");
         }
     };
 
-    // Parse the Body JSON if it's a string, or use directly if array
-    // Laravel might cast it automatically based on model casts
     const contentBody = Array.isArray(post.body) ? post.body : [];
+
+    // 2. The specific typography classes from the source code
+    const typographyClasses = `
+    blog-content text-gray-800 leading-relaxed
+    [&>h1]:text-4xl [&>h1]:font-bold [&>h1]:text-gray-900 [&>h1]:mb-6 [&>h1]:mt-8
+    [&>h2]:text-3xl [&>h2]:font-semibold [&>h2]:text-gray-900 [&>h2]:mb-5 [&>h2]:mt-7
+    [&>h3]:text-2xl [&>h3]:font-semibold [&>h3]:text-gray-900 [&>h3]:mb-4 [&>h3]:mt-6
+    [&>h4]:text-xl [&>h4]:font-medium [&>h4]:text-gray-900 [&>h4]:mb-3 [&>h4]:mt-5
+    [&>h5]:text-lg [&>h5]:font-medium [&>h5]:text-gray-900 [&>h5]:mb-3 [&>h5]:mt-4
+    [&>h6]:text-base [&>h6]:font-medium [&>h6]:text-gray-900 [&>h6]:mb-2 [&>h6]:mt-3
+    [&>p]:mb-4 [&>p]:leading-relaxed
+    [&>ul]:mb-4 [&>ul]:ml-6 [&>ul]:list-disc
+    [&>ol]:mb-4 [&>ol]:ml-6 [&>ol]:list-decimal
+    [&>li]:mb-2
+    [&>blockquote]:border-l-4 [&>blockquote]:border-blue-500 [&>blockquote]:bg-blue-50
+    [&>blockquote]:py-4 [&>blockquote]:px-6 [&>blockquote]:my-6 [&>blockquote]:italic
+    [&>code]:bg-gray-100 [&>code]:px-2 [&>code]:py-1 [&>code]:rounded [&>code]:text-sm [&>code]:font-mono
+    [&>pre]:bg-gray-900 [&>pre]:text-gray-100 [&>pre]:p-4 [&>pre]:rounded-lg [&>pre]:overflow-x-auto [&>pre]:my-6
+    [&>strong]:font-semibold [&>em]:italic [&>u]:underline
+  `;
 
     return (
         <GuestLayout>
-            <Head title={post.title} >
-                <meta name="description" content={post.description || post.subtitle} />
+            <Head title={post.title}>
+                <meta name="description" content={post.description || post.subtitle}/>
             </Head>
 
-            <div className="min-h-screen bg-white">
-                <article className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
+            <div className="min-h-screen bg-gray-50">
+                <article className="relative max-w-3xl md:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-20">
 
                     {/* Back Button */}
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="mb-8"
+                        initial={{opacity: 0, x: -20}}
+                        animate={{opacity: 1, x: 0}}
+                        className="mb-8 md:mb-10"
                     >
                         <Link
-                            href={route('blog.index')}
-                            className="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors font-medium"
+                            href={route("blog.index")}
+                            className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors"
                         >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            <ArrowLeft className="w-4 h-4 mr-2"/>
                             Back to Blog
                         </Link>
                     </motion.div>
 
                     {/* Header Section */}
                     <motion.header
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-10 border-b border-gray-100 pb-10"
+                        initial={{opacity: 0, y: 20}}
+                        animate={{opacity: 1, y: 0}}
+                        className="mb-10 md:mb-12"
                     >
-                        {post.category && (
-                            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
-                                {post.category}
-                            </span>
-                        )}
-
-                        <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
+                        <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
                             {post.title}
                         </h1>
 
-                        <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
                             <div className="flex items-center">
-                                <User className="w-4 h-4 mr-2 text-gray-400" />
-                                <span className="font-medium text-gray-900">{post.author?.name || 'Admin'}</span>
+                                <User className="w-4 h-4 mr-1"/>
+                                <span>{post.author?.name || "Admin"}</span>
                             </div>
                             <div className="flex items-center">
-                                <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                                <Calendar className="w-4 h-4 mr-1"/>
                                 <span>
-                                    {post.published_at
-                                        ? formatDistanceToNow(new Date(post.published_at)) + ' ago'
-                                        : 'Just now'}
-                                </span>
+                  {post.published_at
+                      ? formatDistanceToNow(new Date(post.published_at)) + " ago"
+                      : "Just now"}
+                </span>
                             </div>
                             <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                                <Clock className="w-4 h-4 mr-1"/>
                                 <span>{readTime} min read</span>
                             </div>
                             <div className="flex items-center">
-                                <Eye className="w-4 h-4 mr-2 text-gray-400" />
+                                <Eye className="w-4 h-4 mr-1"/>
                                 <span>{post.views} views</span>
                             </div>
                         </div>
+
+                        {post.subtitle && (
+                            <p className="text-xl text-gray-700 leading-relaxed mb-4">
+                                {post.subtitle}
+                            </p>
+                        )}
+
+                        {post.description && (
+                            <p className="text-lg text-gray-600 leading-relaxed">
+                                {post.description}
+                            </p>
+                        )}
                     </motion.header>
 
                     {/* Featured Image */}
                     {post.featured_image && (
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="mb-12"
+                            initial={{opacity: 0, y: 20}}
+                            animate={{opacity: 1, y: 0}}
+                            transition={{delay: 0.15}}
+                            className="mb-10"
                         >
-                            <div className="relative aspect-video w-full overflow-hidden rounded-2xl shadow-lg">
+                            <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm">
                                 <img
                                     src={post.featured_image}
                                     alt={post.title}
                                     className="object-cover w-full h-full"
                                 />
                             </div>
-                            {post.subtitle && (
-                                <p className="mt-4 text-xl text-gray-600 leading-relaxed italic text-center">
-                                    {post.subtitle}
-                                </p>
-                            )}
                         </motion.div>
                     )}
 
+                    {/* Action Buttons (Like/Share placeholder) */}
+                    <motion.div
+                        initial={{opacity: 0, y: 20}}
+                        animate={{opacity: 1, y: 0}}
+                        transition={{delay: 0.25}}
+                        className="flex flex-wrap gap-4 mb-12 pb-8 border-b border-gray-200"
+                    >
+                        {/* Note: Inertia requires a manual Like implementation via router.post if you want interactivity here */}
+                        <button
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <Heart className="w-4 h-4 mr-2"/>
+                            {post.likes || 0} Likes
+                        </button>
+
+                        <button
+                            onClick={handleShare}
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                            <Share2 className="w-4 h-4 mr-2"/>
+                            Share
+                        </button>
+                    </motion.div>
+
                     {/* Content Rendering Loop */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="prose prose-lg md:prose-xl max-w-none text-gray-800 prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-700 prose-img:rounded-xl"
+                        initial={{opacity: 0, y: 20}}
+                        animate={{opacity: 1, y: 0}}
+                        transition={{delay: 0.3}}
+                        className="max-w-none"
                     >
-                        {/* Fallback for simple content string if Body JSON is empty */}
+                        {/* Fallback for simple string content */}
                         {(!contentBody || contentBody.length === 0) && post.content ? (
-                            <div dangerouslySetInnerHTML={sanitizeHtml(post.content)} />
+                            <div
+                                className={typographyClasses}
+                                dangerouslySetInnerHTML={{__html: sanitizeParagraph(post.content)}}
+                            />
                         ) : (
-                            // Render structured JSON Body
+                            // Structured JSON Body Rendering
                             contentBody.map((block, index) => (
                                 <div key={index} className="mb-6">
-                                    {block.type === "text" && (
-                                        <div dangerouslySetInnerHTML={sanitizeHtml(block.content)} />
-                                    )}
-                                    {/* Future extensibility: Add 'image' or 'video' blocks here */}
+                                    {block.type === "text" ? (
+                                        <div
+                                            className={typographyClasses}
+                                            dangerouslySetInnerHTML={{
+                                                __html: sanitizeParagraph(block.content),
+                                            }}
+                                        />
+                                    ) : block.type === "image" ? (
+                                        <div className="my-8">
+                                            <div className="relative w-full overflow-hidden rounded-lg">
+                                                <img
+                                                    src={block.content}
+                                                    alt={block.alt || `Image ${index + 1}`}
+                                                    className="object-cover w-full h-auto"
+                                                />
+                                            </div>
+                                            {block.caption && (
+                                                <p className="text-sm text-gray-600 text-center mt-2 italic">
+                                                    {block.caption}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : null}
                                 </div>
                             ))
                         )}
                     </motion.div>
 
-                    {/* Footer / Tags / Share */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="mt-16 pt-10 border-t border-gray-200"
-                    >
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-
-                            {/* Tags */}
+                    {/* Tags */}
+                    {post.tags && post.tags.length > 0 && (
+                        <motion.div
+                            initial={{opacity: 0, y: 20}}
+                            animate={{opacity: 1, y: 0}}
+                            transition={{delay: 0.35}}
+                            className="mt-14 pt-10 border-t border-gray-200"
+                        >
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Tags</h3>
                             <div className="flex flex-wrap gap-2">
-                                {post.tags && post.tags.map((tag, i) => (
-                                    <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors cursor-pointer">
-                                        #{tag}
-                                    </span>
+                                {post.tags.map((tag, index) => (
+                                    <span
+                                        key={index}
+                                        className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
+                                    >
+                    #{tag}
+                  </span>
                                 ))}
                             </div>
-
-                            {/* Share Button */}
-                            <button
-                                onClick={handleShare}
-                                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                <Share2 className="w-4 h-4 mr-2 text-gray-500" />
-                                Share Article
-                            </button>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    )}
                 </article>
             </div>
         </GuestLayout>
