@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import InputLabel from '@/Components/Ui/InputLabel';
@@ -90,6 +90,17 @@ export default function PostForm({ data, setData, errors, processing, onClose, o
     };
     const removeSeo = (k) => setData('seo_keywords', data.seo_keywords.filter(i=>i!==k));
 
+    // Create a ref for the hidden file input
+    const fileInputRef = useRef(null);
+
+    // Helper to handle file selection
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setData('featured_image', file);
+        }
+    };
+
     const handleSubmit = (status) => {
         setData('status', status);
         setTimeout(() => { if (onSubmit) onSubmit(); }, 100);
@@ -151,13 +162,65 @@ export default function PostForm({ data, setData, errors, processing, onClose, o
                                         </div>
                                         <div>
                                             <InputLabel value="Featured Image" className="mb-1" />
+
+                                            {/* Hidden File Input */}
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                            />
+
                                             <div className="flex gap-2">
-                                                <TextInput value={typeof data.featured_image === 'string' ? data.featured_image : ''} onChange={e => setData('featured_image', e.target.value)} className="flex-1" placeholder="https://..." />
-                                                <button className="px-4 border rounded hover:bg-gray-50"><Upload className="w-4 h-4" /></button>
+                                                {/* Text Input for URL or File Name display */}
+                                                <TextInput
+                                                    value={
+                                                        // If it's a File object, show the name. If string, show URL.
+                                                        data.featured_image instanceof File
+                                                            ? data.featured_image.name
+                                                            : (data.featured_image || '')
+                                                    }
+                                                    onChange={e => setData('featured_image', e.target.value)}
+                                                    className="flex-1"
+                                                    placeholder="https://... or upload a file"
+                                                    // Disable typing if a file is selected to avoid confusion
+                                                    disabled={data.featured_image instanceof File}
+                                                />
+
+                                                {/* Upload Button triggers the hidden input */}
+                                                <button
+                                                    type="button" // Important so it doesn't submit form
+                                                    onClick={() => fileInputRef.current.click()}
+                                                    className="px-4 border rounded hover:bg-gray-50 flex items-center justify-center"
+                                                >
+                                                    <Upload className="w-4 h-4" />
+                                                </button>
+
+                                                {/* Optional: Clear button if an image is selected */}
+                                                {data.featured_image && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setData('featured_image', null)}
+                                                        className="px-3 border rounded border-red-200 hover:bg-red-50 text-red-500"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             </div>
-                                            {typeof data.featured_image === 'string' && data.featured_image.startsWith('http') && (
-                                                <img src={data.featured_image} alt="Preview" className="mt-2 h-32 rounded object-cover" />
-                                            )}
+
+                                            {/* Preview Logic */}
+                                            <div className="mt-2">
+                                                {/* Preview if it's a URL String */}
+                                                {typeof data.featured_image === 'string' && data.featured_image.startsWith('http') && (
+                                                    <img src={data.featured_image} alt="Preview" className="h-32 rounded object-cover border" />
+                                                )}
+
+                                                {/* Preview if it's a newly uploaded File object */}
+                                                {data.featured_image instanceof File && (
+                                                    <img src={URL.createObjectURL(data.featured_image)} alt="New File Preview" className="h-32 rounded object-cover border" />
+                                                )}
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>

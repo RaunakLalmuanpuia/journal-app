@@ -82,26 +82,22 @@ export default function PostIndex({ auth, posts }) {
 
     // 3. The Submit Handler
     const handleEditorSubmit = () => {
-        // TRANSFORM: This runs immediately before the request is sent.
-        // It converts the Editor's "HTML String" into the "Block Array" expected by the DB/Frontend.
         transform((data) => {
-
-            // Clean up image: If it's still a URL string (not a new File),
-            // set it to null so the backend doesn't try to validate it as a file upload.
-            const imagePayload = (typeof data.featured_image === 'string')
-                ? null
-                : data.featured_image;
-
             return {
                 ...data,
-                featured_image: imagePayload,
-                // THE CRITICAL BRIDGE:
-                // Create the 'body' array structure your frontend expects
+                // 1. DO NOT change this to null. Send the File object or the URL string.
+                featured_image: data.featured_image,
+
+                // 2. IMPORTANT: If we are editing, we must spoof the method.
+                // Browser file uploads ONLY work with POST. We simulate PUT for Laravel.
+                _method: isEditing ? 'PUT' : undefined,
+
+                // 3. Reconstruct the body for the JSON column
                 body: [
                     {
                         id: 'section-main',
                         type: 'text',
-                        content: data.content // The raw HTML from ReactQuill
+                        content: data.content
                     }
                 ]
             };
@@ -109,10 +105,12 @@ export default function PostIndex({ auth, posts }) {
 
         const options = {
             onSuccess: closeModal,
-            forceFormData: true,
+            forceFormData: true, // 4. CRITICAL: This forces the data to be sent as multipart/form-data
         };
 
         if (isEditing) {
+            // 5. CRITICAL: Use post() even for updates, pointing to the update route
+            // The _method: 'PUT' in the payload tells Laravel to treat it as an update.
             post(route('posts.update', currentPostId), options);
         } else {
             post(route('posts.store'), options);
