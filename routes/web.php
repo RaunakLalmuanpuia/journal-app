@@ -11,7 +11,8 @@ use App\Http\Controllers\GoogleDriveAuthController;
 use App\Http\Controllers\UserPlanController;
 use App\Http\Controllers\AdminPlanController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\BlogController;
 
 Route::get('/', function () {
     return Inertia::render('Frontend/Home/Index', [
@@ -78,6 +79,10 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::patch('/users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
 });
 
+
+
+Route::resource('posts', PostController::class)->middleware(['auth', 'verified']);
+
 Route::get('/contact', function () {
     return Inertia::render('Frontend/Contact',[]);
 })->name('contact');
@@ -99,4 +104,8 @@ Route::get('/shipping-delivery', function () {
     return Inertia::render('Frontend/ShippingDelivery',[]);
 })->name('shipping-delivery');
 
+
+// Public Blog Routes
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
 require __DIR__.'/auth.php';
