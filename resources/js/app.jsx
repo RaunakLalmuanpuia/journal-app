@@ -4,6 +4,7 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { trackPageView } from './utils/ga'
 
 const appName = 'KeyTag Journal - Transform Chaos to Clarity | Productivity Tracking';
 
@@ -18,6 +19,11 @@ createInertiaApp({
         const root = createRoot(el);
 
         root.render(<App {...props} />);
+        trackPageView(window.location.pathname)
+
+        document.addEventListener('inertia:navigate', (event) => {
+            trackPageView(event.detail.page.url)
+        })
     },
     progress: {
         color: '#4B5563',

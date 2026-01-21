@@ -10,6 +10,21 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+
+{{--        Google Analytics--}}
+        @if (app()->environment('production'))
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ env('VITE_GA_MEASUREMENT_ID') }}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '{{ env('VITE_GA_MEASUREMENT_ID') }}', {
+                    send_page_view: false
+                });
+            </script>
+        @endif
+
+
         <!-- Scripts -->
         @routes
         @viteReactRefresh
