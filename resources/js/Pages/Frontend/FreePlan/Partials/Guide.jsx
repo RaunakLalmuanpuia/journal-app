@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-
+import { router } from '@inertiajs/react';
 // --- Icons ---
 const DownloadIcon = () => (
     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -20,7 +20,7 @@ const LightbulbIcon = () => (
 
 export default function Guide() {
     // Logic Handlers
-    const handlePlanClick = (plan) => console.log(plan);
+    const handlePlanClick = (plan) =>  router.get('/dashboard');
     const handleViewDemo = () => window.open("https://drive.google.com/drive/folders/13sF8KclZYTzlYc3v5SbcOyMsRDwV7RM_?usp=drive_link", "_blank");
     const isProcessingPayment = false;
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle } from "lucide-react";
-
+import { router } from '@inertiajs/react';
 export const Plan = () => {
     // Animation definition
     const fadeInUp = {
@@ -94,7 +94,9 @@ export const Plan = () => {
                                             whileTap={{ scale: 0.95 }}
                                             className="mb-6"
                                         >
-                                            <button className="w-full lg:w-auto flex items-center justify-center bg-gradient-to-r from-[#12b5e2] to-[#0ea5d3] text-white px-12 py-4 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:from-[#0ea5d3] hover:to-[#0aa0c7] relative overflow-hidden group">
+                                            <button
+                                                onClick={() => router.get('/dashboard')}
+                                                className="w-full lg:w-auto flex items-center justify-center bg-gradient-to-r from-[#12b5e2] to-[#0ea5d3] text-white px-12 py-4 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:from-[#0ea5d3] hover:to-[#0aa0c7] relative overflow-hidden group">
                                                 {/* Button animation overlay */}
                                                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                                                 <ArrowRight className="w-6 h-6 mr-3 relative z-10" />

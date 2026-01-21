@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { router } from '@inertiajs/react';
 
 // Icons
 const CheckCircleIcon = () => (
@@ -122,7 +123,7 @@ export default function Download() {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <button
-                                    onClick={() => alert("Redirecting to download...")}
+                                    onClick={() => router.get('/dashboard')}
                                     className=" inline-flex items-center justify-center bg-gradient-to-r from-[#12b5e2] to-blue-600 text-white px-12 py-4 text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:from-[#0ea5d3] hover:to-blue-700 relative overflow-hidden group"
                                 >
                                     {/* Button animation overlay */}
