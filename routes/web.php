@@ -14,6 +14,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\EnterpriseInquiryController;
+
 
 
 
@@ -120,4 +122,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/help-support', [SupportTicketController::class, 'index'])->name('support.index');
     Route::post('/help-support', [SupportTicketController::class, 'store'])->name('support.store');
 });
+
+Route::post('/enterprise-inquiry', [EnterpriseInquiryController::class, 'store'])
+    ->name('enterprise.store');
 require __DIR__.'/auth.php';
