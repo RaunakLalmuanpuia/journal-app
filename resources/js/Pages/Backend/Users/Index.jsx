@@ -80,6 +80,7 @@ export default function Index({ auth, users, roles, filters }) {
                                     </div>
 
                                     {/* Clear Filters Link - Placed Below */}
+
                                     <Link
                                         href={route('users.index')}
                                         className="text-xs text-gray-500 hover:text-gray-800 underline"
@@ -89,36 +90,9 @@ export default function Index({ auth, users, roles, filters }) {
                                 </div>
                             </div>
 
-                            {/* Filter Bar */}
-                            {/*<div className="flex flex-col md:flex-row justify-between mb-6 gap-4">*/}
-                            {/*    <div className="flex gap-4 w-full md:w-2/3">*/}
-                            {/*        <input*/}
-                            {/*            type="text"*/}
-                            {/*            placeholder="Search name or email..."*/}
-                            {/*            value={search}*/}
-                            {/*            onChange={(e) => setSearch(e.target.value)}*/}
-                            {/*            className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full md:w-64"*/}
-                            {/*        />*/}
-                            {/*        <select*/}
-                            {/*            value={selectedRole}*/}
-                            {/*            onChange={(e) => setSelectedRole(e.target.value)}*/}
-                            {/*            className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full md:w-48"*/}
-                            {/*        >*/}
-                            {/*            <option value="">All Roles</option>*/}
-                            {/*            {roles.map((roleName) => (*/}
-                            {/*                <option key={roleName} value={roleName}>{roleName}</option>*/}
-                            {/*            ))}*/}
-                            {/*        </select>*/}
-                            {/*    </div>*/}
-                            {/*    <div className="flex justify-end">*/}
-                            {/*        <Link href={route('users.index')} className="text-sm text-gray-600 hover:text-gray-900 underline mt-2">*/}
-                            {/*            Clear Filters*/}
-                            {/*        </Link>*/}
-                            {/*    </div>*/}
-                            {/*</div>*/}
 
                             {/* Table */}
-                            <div className="overflow-x-auto min-h-[400px]">
+                            <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                     <tr>

@@ -18,6 +18,8 @@ export default function AdminLayout({ children }) {
         { label: 'Overview', href: '/dashboard' },
         { label: 'Plans', href: '/admin/plans' },
         { label: 'Users', href: '/admin/users' },
+        { label: 'Inquiry', href: '/admin/inquiries' },
+        { label: 'Support', href: '/admin/support' },
         { label: 'Blog Posts', href: '/posts' },
         { label: 'Settings', href: '/admin/settings' },
     ];

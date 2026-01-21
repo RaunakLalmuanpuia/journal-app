@@ -123,6 +123,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/help-support', [SupportTicketController::class, 'store'])->name('support.store');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/support', [SupportTicketController::class, 'adminIndex'])->name('admin.support.index');
+});
+
 Route::post('/enterprise-inquiry', [EnterpriseInquiryController::class, 'store'])
     ->name('enterprise.store');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/inquiries', [EnterpriseInquiryController::class, 'index'])->name('inquiries.index');
+    Route::patch('/admin/support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])
+        ->name('admin.support.updateStatus');
+});
 require __DIR__.'/auth.php';
