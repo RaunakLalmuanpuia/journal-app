@@ -36,7 +36,10 @@ class BlogController extends Controller
     {
         // 2. Add ->with('author') here too (for the single post page)
         $post = Post::query()
-            ->with(['author:id,name,avatar'])
+            ->with([ 'author:id,name,avatar',
+                'comments.user' => function($query) {
+                    $query->select('id', 'name', 'email' ,'avatar'); // Select only what you need for security
+                }])
             ->where('id', $id)
             ->where('status', 'published')
             ->firstOrFail();

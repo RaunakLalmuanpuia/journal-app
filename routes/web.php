@@ -15,7 +15,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\EnterpriseInquiryController;
-
+use App\Http\Controllers\CommentController;
 
 
 
@@ -59,7 +59,6 @@ Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallba
 
 
 Route::middleware('auth')->group(function () {
-
     Route::get('/pro/connect-drive', [GoogleDriveAuthController::class, 'redirect'])
         ->name('pro.connect.drive');
 
@@ -118,21 +117,30 @@ Route::get('/internal/latest-posts', [BlogController::class, 'getLatestPostsJson
     ->name('internal.posts.latest');
 
 
+
+//User Raise Support Ticker
 Route::middleware(['auth'])->group(function () {
     Route::get('/help-support', [SupportTicketController::class, 'index'])->name('support.index');
     Route::post('/help-support', [SupportTicketController::class, 'store'])->name('support.store');
 });
-
+//Admin Support Ticket Index and Change status
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/support', [SupportTicketController::class, 'adminIndex'])->name('admin.support.index');
-});
-
-Route::post('/enterprise-inquiry', [EnterpriseInquiryController::class, 'store'])
-    ->name('enterprise.store');
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/inquiries', [EnterpriseInquiryController::class, 'index'])->name('inquiries.index');
     Route::patch('/admin/support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])
         ->name('admin.support.updateStatus');
 });
+
+// User Send Inquiry about Enterprise Plan
+Route::post('/enterprise-inquiry', [EnterpriseInquiryController::class, 'store'])
+    ->name('enterprise.store');
+
+// Admin Enterprise Plan Inquiry
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/inquiries', [EnterpriseInquiryController::class, 'index'])->name('inquiries.index');
+
+});
+
+Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+    ->name('comments.store')
+    ->middleware(['auth', 'verified']);
 require __DIR__.'/auth.php';
