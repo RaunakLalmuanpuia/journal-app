@@ -34,15 +34,35 @@ class BlogController extends Controller
 
     public function show($id)
     {
+
+        $userId = auth()->id();
         // 2. Add ->with('author') here too (for the single post page)
         $post = Post::query()
-            ->with([ 'author:id,name,avatar',
-                'comments.user' => function($query) {
-                    $query->select('id', 'name', 'email' ,'avatar'); // Select only what you need for security
-                }])
+            ->with([ 'author:id,name,avatar'])
+            ->with(['comments' => function ($query) use ($userId) {
+                $query->whereNull('parent_id')
+                    ->orderBy('created_at', 'desc')
+                    ->with([
+                        'user:id,name,avatar',
+                        // Load the replies recursively
+                        'replies' => function($q) use ($userId) {
+                            $q->with('user:id,name,avatar')
+                                ->withCount('likes')
+                                ->withExists(['likes as is_liked' => function($subQ) use ($userId) {
+                                    $subQ->where('user_id', $userId);
+                                }]);
+                        }
+                    ])
+                    ->withCount('likes')
+                    ->withExists(['likes as is_liked' => function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    }]);
+            }])
             ->where('id', $id)
             ->where('status', 'published')
             ->firstOrFail();
+
+//        dd($post);
 
         $post->increment('views');
 

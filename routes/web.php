@@ -143,4 +143,10 @@ Route::middleware(['auth'])->group(function () {
 Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
     ->name('comments.store')
     ->middleware(['auth', 'verified']);
+
+Route::post('/comments/{comment}/like', [CommentController::class, 'toggleLike'])
+    ->middleware('auth')->name('comments.like');
+
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
 require __DIR__.'/auth.php';
