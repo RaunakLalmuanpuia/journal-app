@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EnterpriseInquiry extends Model
 {
@@ -11,6 +12,7 @@ class EnterpriseInquiry extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'company',
         'contact_name',
         'email',
@@ -18,4 +20,9 @@ class EnterpriseInquiry extends Model
         'requirements',
         'budget',
     ];
+
+    public function user() : BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }
