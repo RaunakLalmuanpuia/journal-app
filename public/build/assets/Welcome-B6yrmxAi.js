@@ -1,1 +1,0 @@
-import{j as r}from"./app-BkrwjwnH.js";import{G as t}from"./GuestLayout-s7qvGj1K.js";import"./TextInput-DYjkmKoz.js";function n({auth:e,laravelVersion:o,phpVersion:s}){return r.jsx(r.Fragment,{children:r.jsx(t,{})})}export{n as default};
