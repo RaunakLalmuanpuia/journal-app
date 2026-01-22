@@ -32,12 +32,12 @@ export default function Footer() {
                         <h4 className="text-lg font-semibold mb-4 text-white">Product</h4>
                         <ul className="space-y-3 text-sm">
                             <li>
-                                <Link href="/product-sample" className="text-gray-400 hover:text-white transition-colors">
+                                <Link href="/demo" className="text-gray-400 hover:text-white transition-colors">
                                     Product Demo
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/free-guide" className="text-gray-400 hover:text-white transition-colors">
+                                <Link href="/free-plan" className="text-gray-400 hover:text-white transition-colors">
                                     Free Guide
                                 </Link>
                             </li>

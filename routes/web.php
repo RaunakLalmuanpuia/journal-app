@@ -28,7 +28,6 @@ Route::get('/', function () {
     ]);
 });
 
-
 Route::get('/demo', function () {
     return Inertia::render('Frontend/Demo/Index', []);
 });
@@ -69,15 +68,16 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/my-products', [UserPlanController::class, 'index'])->name('products.index');
 
+
 });
 
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth','role:Admin'])->prefix('admin')->group(function () {
     Route::get('/plans', [AdminPlanController::class, 'index'])->name('admin.plans.index');
     Route::get('/{user}/plans', [AdminPlanController::class, 'show'])->name('admin.plans.show');
 });
 
 
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth','role:Admin'])->prefix('admin')->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
     Route::patch('/users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
@@ -85,7 +85,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
 
 
-Route::resource('posts', PostController::class)->middleware(['auth', 'verified']);
+Route::resource('posts', PostController::class)->middleware(['auth', 'verified','role:Admin']);
 
 Route::get('/contact', function () {
     return Inertia::render('Frontend/Contact',[]);
@@ -112,9 +112,18 @@ Route::get('/shipping-delivery', function () {
 // Public Blog Routes
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
-
 Route::get('/internal/latest-posts', [BlogController::class, 'getLatestPostsJson'])
     ->name('internal.posts.latest');
+
+
+Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+    ->name('comments.store')
+    ->middleware(['auth', 'verified']);
+
+Route::post('/comments/{comment}/like', [CommentController::class, 'toggleLike'])
+    ->middleware('auth')->name('comments.like');
+
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
 
 
@@ -124,7 +133,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/help-support', [SupportTicketController::class, 'store'])->name('support.store');
 });
 //Admin Support Ticket Index and Change status
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth','role:Admin'])->group(function () {
     Route::get('/admin/support', [SupportTicketController::class, 'adminIndex'])->name('admin.support.index');
     Route::patch('/admin/support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])
         ->name('admin.support.updateStatus');
@@ -135,18 +144,10 @@ Route::post('/enterprise-inquiry', [EnterpriseInquiryController::class, 'store']
     ->name('enterprise.store');
 
 // Admin Enterprise Plan Inquiry
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth','role:Admin'])->group(function () {
     Route::get('/admin/inquiries', [EnterpriseInquiryController::class, 'index'])->name('inquiries.index');
 
 });
 
-Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
-    ->name('comments.store')
-    ->middleware(['auth', 'verified']);
-
-Route::post('/comments/{comment}/like', [CommentController::class, 'toggleLike'])
-    ->middleware('auth')->name('comments.like');
-
-Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
 require __DIR__.'/auth.php';

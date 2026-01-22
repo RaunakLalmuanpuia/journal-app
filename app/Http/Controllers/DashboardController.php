@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +21,7 @@ class DashboardController extends Controller
                 'total_users'  => User::count(),
                 // Example: Users active in last 30 days. Adjust logic as needed.
                 'active_users' => User::where('updated_at', '>=', now()->subDays(30))->count(),
-                'blog_posts'   => 5, // Replace with: Post::count()
+                'blog_posts'   => Post::count(), // Replace with: Post::count()
                 'revenue'      => '$12,345', // Replace with real payment calculation
             ];
 

@@ -21,7 +21,7 @@ export default function AdminLayout({ children }) {
         { label: 'Inquiry', href: '/admin/inquiries' },
         { label: 'Support', href: '/admin/support' },
         { label: 'Blog Posts', href: '/posts' },
-        { label: 'Settings', href: '/admin/settings' },
+        // { label: 'Settings', href: '/admin/settings' },
     ];
 
     // Helper to check if a tab is active (with safety check)

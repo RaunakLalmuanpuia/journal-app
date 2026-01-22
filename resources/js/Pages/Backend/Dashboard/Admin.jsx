@@ -76,7 +76,7 @@ export default function AdminDashboard({ auth, stats }) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Link href="/admin/posts/create" className="flex items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors group cursor-pointer">
+                    <Link href="/posts" className="flex items-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors group cursor-pointer">
                         <div className="mr-4 p-2 bg-transparent rounded-full">
                             <Plus className="w-5 h-5 text-blue-600" />
                         </div>
@@ -90,12 +90,12 @@ export default function AdminDashboard({ auth, stats }) {
                         <span className="text-sm font-semibold text-green-800">Manage Users</span>
                     </Link>
 
-                    <Link href="/admin/settings" className="flex items-center p-4 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors group cursor-pointer">
-                        <div className="mr-4 p-2 bg-transparent rounded-full">
-                            <Settings className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <span className="text-sm font-semibold text-purple-800">System Settings</span>
-                    </Link>
+                    {/*<Link href="/admin/settings" className="flex items-center p-4 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors group cursor-pointer">*/}
+                    {/*    <div className="mr-4 p-2 bg-transparent rounded-full">*/}
+                    {/*        <Settings className="w-5 h-5 text-purple-600" />*/}
+                    {/*    </div>*/}
+                    {/*    <span className="text-sm font-semibold text-purple-800">System Settings</span>*/}
+                    {/*</Link>*/}
                 </div>
             </div>
         </AdminLayout>
