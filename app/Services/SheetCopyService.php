@@ -140,6 +140,10 @@ class SheetCopyService
     /**
      * Copies ALL files (Sheets, Docs, Images, PDFs) from Bot to User.
      */
+    /**
+     * Copies ALL files (Sheets, Docs, Images, PDFs) from Bot to User.
+     * Updated to support Shared Drives (Folders shared with the Bot).
+     */
     private static function bridgeFiles(GoogleDrive $reader, GoogleDrive $writer, $sourceId, $destId, $userName, $userId)
     {
         $dashboardId = null;
@@ -147,104 +151,120 @@ class SheetCopyService
         $allFiles = [];
         $pageToken = null;
 
+        Log::info("--- STARTING BRIDGE FILES ---");
+        Log::info("Looking in Source Folder: {$sourceId}");
+
         do {
-            // List all files in the template folder
+            // 1. LIST FILES (Keep flags here - this works!)
             $response = $reader->files->listFiles([
                 'q' => "'{$sourceId}' in parents and trashed = false",
-                'fields' => 'nextPageToken, files(id, name, mimeType)',
-                'pageToken' => $pageToken
+                'fields' => 'nextPageToken, files(id, name, mimeType, webViewLink)',
+                'pageToken' => $pageToken,
+                'supportsAllDrives' => true,
+                'includeItemsFromAllDrives' => true
             ]);
 
+            Log::info("Found " . count($response->files) . " files in this page.");
+
             foreach ($response->files as $file) {
-                // Rename Logic
                 $newFileName = str_replace(['<Username>', '<User ID>'], [$userName, $userId], $file->name);
                 if ($newFileName === $file->name) {
                     $newFileName = "{$file->name} - {$userName}";
+                }
+
+                if ($file->mimeType === 'application/vnd.google-apps.shortcut') {
+                    Log::info("Skipping shortcut: {$file->name}");
+                    continue;
                 }
 
                 $fileContent = null;
                 $uploadMimeType = null;
                 $convertFile = false;
 
-                // ---------------------------------------------------
-                // HANDLE DIFFERENT FILE TYPES
-                // ---------------------------------------------------
+                try {
+                    // --------------------------------------------------------
+                    // FIX: Separate Options for Export vs Get
+                    // --------------------------------------------------------
 
-                if ($file->mimeType === 'application/vnd.google-apps.spreadsheet') {
-                    // Export Sheet -> Upload as Sheet
-                    $export = $reader->files->export($file->id, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ['alt' => 'media']);
-                    $fileContent = $export->getBody()->getContents();
-                    $uploadMimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                    $convertFile = true; // Ask Google to convert back to Native Sheet
-                }
-                elseif ($file->mimeType === 'application/vnd.google-apps.document') {
-                    // Export Doc -> Upload as Doc
-                    $export = $reader->files->export($file->id, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', ['alt' => 'media']);
-                    $fileContent = $export->getBody()->getContents();
-                    $uploadMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-                    $convertFile = true;
-                }
-                elseif ($file->mimeType === 'application/vnd.google-apps.presentation') {
-                    // Export Slides -> Upload as Slides
-                    $export = $reader->files->export($file->id, 'application/vnd.openxmlformats-officedocument.presentationml.presentation', ['alt' => 'media']);
-                    $fileContent = $export->getBody()->getContents();
-                    $uploadMimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-                    $convertFile = true;
-                }
-                else {
-                    // Binary files (PDF, JPG, etc.) -> Direct Copy
-                    try {
-                        $content = $reader->files->get($file->id, ['alt' => 'media']);
+                    // Options for EXPORT (Docs/Sheets) - CANNOT have 'supportsAllDrives'
+                    $exportOptions = [
+                        'alt' => 'media'
+                    ];
+
+                    // Options for GET (Binary files) - CAN have 'supportsAllDrives'
+                    $getOptions = [
+                        'alt' => 'media',
+                        'supportsAllDrives' => true
+                    ];
+
+                    if ($file->mimeType === 'application/vnd.google-apps.spreadsheet') {
+                        // Use exportOptions (No supportsAllDrives)
+                        $export = $reader->files->export(
+                            $file->id,
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            $exportOptions
+                        );
+                        $fileContent = $export->getBody()->getContents();
+                        $uploadMimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                        $convertFile = true;
+                    }
+                    elseif ($file->mimeType === 'application/vnd.google-apps.document') {
+                        // Use exportOptions
+                        $export = $reader->files->export(
+                            $file->id,
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            $exportOptions
+                        );
+                        $fileContent = $export->getBody()->getContents();
+                        $uploadMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                        $convertFile = true;
+                    }
+                    elseif ($file->mimeType === 'application/vnd.google-apps.presentation') {
+                        // Use exportOptions
+                        $export = $reader->files->export(
+                            $file->id,
+                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                            $exportOptions
+                        );
+                        $fileContent = $export->getBody()->getContents();
+                        $uploadMimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+                        $convertFile = true;
+                    }
+                    else {
+                        // Binary Files (PDFs, Images) -> Use getOptions (With supportsAllDrives)
+                        $content = $reader->files->get($file->id, $getOptions);
                         $fileContent = $content->getBody()->getContents();
                         $uploadMimeType = $file->mimeType;
                         $convertFile = false;
-                    } catch (\Exception $e) {
-                        Log::warning("Skipping file {$file->name} - could not download content.");
-                        continue;
                     }
+                } catch (\Exception $e) {
+                    Log::error("Failed to download {$file->name}: " . $e->getMessage());
+                    continue;
                 }
 
-                // ---------------------------------------------------
-                // UPLOAD AS USER
-                // ---------------------------------------------------
-
+                // 3. UPLOAD AS USER
                 $fileMetadataConfig = [
                     'name' => $newFileName,
                     'parents' => [$destId],
                 ];
 
-                // If converting (e.g. uploading Excel to become Sheet), specify the Google MimeType
                 if ($convertFile) {
-                    if (str_contains($uploadMimeType, 'spreadsheet')) {
-                        $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.spreadsheet';
-                    } elseif (str_contains($uploadMimeType, 'wordprocessing')) {
-                        $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.document';
-                    } elseif (str_contains($uploadMimeType, 'presentation')) {
-                        $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.presentation';
-                    }
+                    if (str_contains($uploadMimeType, 'spreadsheet')) $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.spreadsheet';
+                    elseif (str_contains($uploadMimeType, 'wordprocessing')) $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.document';
+                    elseif (str_contains($uploadMimeType, 'presentation')) $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.presentation';
                 }
 
-                $fileMetadata = new DriveFile($fileMetadataConfig);
-
                 try {
-                    $createdFile = $writer->files->create($fileMetadata, [
+                    $createdFile = $writer->files->create(new DriveFile($fileMetadataConfig), [
                         'data' => $fileContent,
                         'mimeType' => $uploadMimeType,
                         'uploadType' => 'multipart',
                         'fields' => 'id, name, webViewLink, mimeType'
                     ]);
 
-                    // ---------------------------------------------------
-                    // CATEGORIZE & ASSIGN TYPE
-                    // ---------------------------------------------------
-
-                    $type = 'docs'; // Default for PDF/Images/Docs
-                    $isSheet = ($createdFile->mimeType === 'application/vnd.google-apps.spreadsheet');
-
-                    if ($isSheet) {
-                        // Check if it's a Monthly sheet or Dashboard
+                    $type = 'docs';
+                    if ($createdFile->mimeType === 'application/vnd.google-apps.spreadsheet') {
                         $isMonthly = preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i', $createdFile->name);
-
                         if ($isMonthly) {
                             $type = 'sheet';
                             $monthlySheets[] = [
@@ -253,13 +273,11 @@ class SheetCopyService
                                 'url' => "https://docs.google.com/spreadsheets/d/{$createdFile->id}/edit"
                             ];
                         } else {
-                            // It is the Dashboard
-                            $type = 'sheet'; // <--- CHANGED: Store as 'sheet' in DB per request
+                            $type = 'sheet';
                             $dashboardId = $createdFile->id;
                         }
                     }
 
-                    // Add to all files list for DB
                     $allFiles[] = [
                         'google_file_id' => $createdFile->id,
                         'name' => $createdFile->name,
@@ -267,8 +285,10 @@ class SheetCopyService
                         'type' => $type
                     ];
 
+                    Log::info("Copied: {$createdFile->name}");
+
                 } catch (\Exception $e) {
-                    Log::error("Failed to upload bridged file {$newFileName}: " . $e->getMessage());
+                    Log::error("Failed to upload {$newFileName}: " . $e->getMessage());
                 }
             }
             $pageToken = $response->nextPageToken;
@@ -280,8 +300,7 @@ class SheetCopyService
             'allFiles' => $allFiles
         ];
     }
-
-    private static function getUserClient(User $user)
+     private static function getUserClient(User $user)
     {
         $client = new Client();
         $client->setClientId(config('services.google.client_id'));

@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProvisioningModal from '@/Components/ProvisioningModal';
 
 // --- NEW HELPER: Google Doc URL ---
-const GOOGLE_DOC_URL = "https://docs.google.com/document/d/1IwUGpIbV9tf0gmAX5urAP2Jb8S2f55dJ-CivHKLzCeI/edit";
+const GOOGLE_DOC_URL = "https://docs.google.com/document/d/1wzGzEOtpL_Q7tNCrN3FUx50kQf7nfX8Ivy1Q0Ur4F6k/edit";
 
 // --- NEW HELPER: Convert Drive URL to Embed URL ---
 const getEmbedUrl = (url, type) => {
