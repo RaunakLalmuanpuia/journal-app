@@ -1,101 +1,226 @@
-import React from 'react';
-import { Link } from '@inertiajs/react';
-import { Calendar, Clock, ArrowRight } from 'lucide-react'; // Removed 'User' icon as we use img/initials
-import { formatDistanceToNow } from 'date-fns';
+"use client";
+
+import React, { useState } from "react";
+import { Link } from "@inertiajs/react";
+import {
+    Share2,
+    Clock,
+    Calendar,
+    User,
+    ExternalLink,
+    ImageOff,
+    Badge
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { formatDistanceToNow, format } from "date-fns";
+
+
+// Helper: Sanitize and truncate HTML for preview
+function sanitizeHtml(html) {
+    if (!html) return "";
+    const clean = html
+        .replace(/<(script|style)[^>]*>[\s\S]*?<\/(script|style)>/gi, "")
+        .replace(/<([^>]+)>/g, (match, tag) => {
+            const tagName = tag.split(" ")[0].replace(/\//g, "").toLowerCase();
+            return ["b", "strong", "i", "em", "u", "p", "br", "span"].includes(tagName) ? match : "";
+        });
+    const textOnly = clean.replace(/<[^>]*>/g, "");
+    return textOnly.length > 160 ? `<p>${textOnly.slice(0, 160)}...</p>` : clean;
+}
 
 export default function BlogCard({ post }) {
-    // Calculate rough read time
+    const [imageError, setImageError] = useState(false);
+    const [authorImageError, setAuthorImageError] = useState(false);
+    const [showShareDropdown, setShowShareDropdown] = useState(false);
+    const [shareMessage, setShareMessage] = useState(null);
+
     const readTime = Math.ceil((post.content?.length || 0) / 1000) || 1;
 
-    // Helper: Get initials from name (e.g. "John Doe" -> "JD")
-    const getInitials = (name) => {
-        if (!name) return 'AD'; // Default for Admin
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .substring(0, 2)
-            .toUpperCase();
+    const handleShare = async (platform) => {
+        const postUrl = window.location.origin + route('blog.show', post.id);
+        if (platform === "copy-link") {
+            await navigator.clipboard.writeText(postUrl);
+            setShareMessage("Link copied to clipboard!");
+            setTimeout(() => setShareMessage(null), 3000);
+        } else {
+            const shareUrl = platform === "facebook"
+                ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`
+                : `https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(post.title)}`;
+            window.open(shareUrl, "_blank", "width=600,height=400");
+        }
+        setShowShareDropdown(false);
     };
 
-    // Determine the avatar URL (adjust property name if needed, e.g. post.author.profile_photo_path)
-    const authorAvatar = post.author?.avatar || post.author?.profile_photo_path;
-
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col h-full">
-            {/* Image */}
-            {post.featured_image && (
-                <div className="h-48 w-full overflow-hidden bg-gray-100 relative">
-                    <img
-                        src={post.featured_image}
-                        alt={post.title}
-                        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                        <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-blue-600 rounded-full shadow-sm">
-                            {post.category || 'General'}
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="h-full"
+        >
+            <div
+                className="h-full bg-white rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden group cursor-pointer flex flex-col"
+                onClick={() => (window.location.href = route("blog.show", post.id))}
+            >
+                {/* Featured Image */}
+                <div className="relative h-48 overflow-hidden bg-gray-100">
+                    {!imageError && post.featured_image ? (
+                        <img
+                            src={post.featured_image}
+                            alt={post.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={() => setImageError(true)}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                            <ImageOff className="w-10 h-10 text-gray-400 opacity-50" />
+                        </div>
+                    )}
+
+                    {post.is_featured && (
+                        <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-500 text-white">
+              Featured
+            </span>
+                    )}
+                </div>
+
+                {/* Card Header Section */}
+                <div className="p-6 pb-3">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-transparent">
+                          {post.category || 'General'}
                         </span>
+                        <div className="flex items-center space-x-1 text-xs text-gray-500">
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                                {post.created_at
+                                    ? format(new Date(post.created_at), 'MMM d, yyyy')
+                                    : 'Recently'
+                                }
+                            </span>
+                        </div>
                     </div>
-                </div>
-            )}
 
-            <div className="p-6 flex flex-col flex-1">
-                {/* Meta */}
-                <div className="flex items-center text-xs text-gray-500 mb-4 space-x-4">
-                    <div className="flex items-center">
-                        <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                        {post.published_at ? formatDistanceToNow(new Date(post.published_at)) + ' ago' : 'Recently'}
-                    </div>
-                    <div className="flex items-center">
-                        <Clock className="w-3.5 h-3.5 mr-1.5" />
-                        {readTime} min read
-                    </div>
-                </div>
-
-                {/* Title */}
-                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
-                    <Link href={route('blog.show', post.id)}>
+                    <h3 className="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-[#12b5e2] transition-colors">
                         {post.title}
-                    </Link>
-                </h3>
+                    </h3>
 
-                <p className="text-gray-600 text-sm line-clamp-3 mb-6 flex-1">
-                    {post.description || post.subtitle || 'No description available.'}
-                </p>
+                    {post.subtitle && (
+                        <p className="text-sm text-gray-600 line-clamp-1 font-medium mt-1">
+                            {post.subtitle}
+                        </p>
+                    )}
+                </div>
 
-                {/* Footer with Avatar */}
-                <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
-                    <div className="flex items-center">
+                {/* Card Content Section */}
+                <div className="px-6 pt-0 pb-6 flex flex-col flex-1">
+                    <div
+                        className="text-gray-600 text-sm line-clamp-3 mb-4 prose prose-sm max-w-none flex-1"
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.description || post.content) }}
+                    />
 
-                        {/* Avatar Circle */}
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-100 ring-2 ring-white shadow-sm">
-                            {authorAvatar ? (
+                    {/* Author Info */}
+                    <div className="flex items-center space-x-2 mb-4">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border border-gray-100 shadow-sm">
+                            {post.author?.avatar && !authorImageError ? (
                                 <img
-                                    src={authorAvatar}
-                                    alt={post.author?.name}
+                                    src={post.author.avatar}
+                                    alt={post.author.name}
                                     className="w-full h-full object-cover"
+                                    onError={() => setAuthorImageError(true)}
                                 />
                             ) : (
-                                <span className="text-[10px] font-bold text-gray-500 tracking-tighter">
-                                    {getInitials(post.author?.name)}
-                                </span>
+                                <User className="w-4 h-4 text-gray-600" />
                             )}
                         </div>
-
-                        <span className="text-sm font-medium text-gray-700 ml-2">
-                            {post.author?.name || 'Admin'}
-                        </span>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900 leading-none">
+                                {post.author?.name || 'Admin'}
+                            </p>
+                            <div className="flex items-center space-x-1 text-xs text-gray-500 mt-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{readTime} min read</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <Link
-                        href={route('blog.show', post.id)}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-semibold flex items-center group"
-                    >
-                        Read More
-                        <ArrowRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
-                    </Link>
+
+                    {/* Tags Section */}
+                    {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-4">
+                            {post.tags.slice(0, 3).map((tag, index) => (
+                                <span
+                                    key={index}
+                                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-gray-100 text-gray-800"
+                                >
+                                    {tag}
+                                </span>
+                            ))}
+                            {post.tags.length > 3 && (
+                                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-gray-100 text-gray-800">
+                                +{post.tags.length - 3}
+                            </span>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Action Buttons Row */}
+                    <div className="flex items-center pt-3 justify-between border-t border-gray-50">
+                        <div className="relative">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowShareDropdown(!showShareDropdown);
+                                }}
+                                className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-blue-500 rounded-md transition-colors"
+                            >
+                                <Share2 className="w-4 h-4" />
+                            </button>
+
+                            {/* Share Dropdown */}
+                            <AnimatePresence>
+                                {showShareDropdown && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setShowShareDropdown(false); }} />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            className="absolute bottom-full left-0 mb-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-[140px]"
+                                        >
+                                            {['facebook', 'twitter', 'copy-link'].map((platform) => (
+                                                <button
+                                                    key={platform}
+                                                    onClick={(e) => { e.stopPropagation(); handleShare(platform); }}
+                                                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded capitalize transition-colors"
+                                                >
+                                                    {platform.replace('-', ' ')}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <Link
+                            href={route('blog.show', post.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center space-x-1 bg-[#12b5e2] hover:bg-[#0ea5cd] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
+                        >
+                            <span>Read More</span>
+                            <ExternalLink className="w-3 h-3" />
+                        </Link>
+                    </div>
+
+                    {/* Toast-style Share Message */}
+                    {shareMessage && (
+                        <div className="mt-2 p-2 bg-green-50 text-green-700 text-xs rounded border border-green-100 text-center animate-pulse">
+                            {shareMessage}
+                        </div>
+                    )}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
