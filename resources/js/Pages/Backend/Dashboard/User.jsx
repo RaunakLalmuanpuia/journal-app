@@ -1,25 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-    ArrowRight,
-    CheckCircle2,
-    Star,
-    Users,
-    Loader2,
-    ExternalLink,
-    FolderCheck,
-    Check,
-    X,
-    // --- NEW IMPORTS START ---
-    BookOpen,
-    Maximize2,
-    Minimize2,
-    FileText,
-    Sheet,
-    Presentation,
-    FileQuestion,
-    LayoutDashboard,
-    File as FileGeneric
-    // --- NEW IMPORTS END ---
+import {ArrowRight, CheckCircle2, Star, Users, Loader2, ExternalLink, FolderCheck, Check, X, BookOpen,
+    Maximize2, Minimize2, FileText, File as FileGeneric
 } from 'lucide-react';
 import UserLayout from '@/Layouts/UserLayout';
 import { usePage, router, useForm } from "@inertiajs/react";
@@ -89,6 +70,26 @@ export default function User() {
     const driveResources = user.drive_resources || user.driveResources || [];
     const proFolder = driveResources.find(r => r.type === 'folder' && r.plan_id !== null);
     const isProvisioning = hasPro && !proFolder;
+
+    // Add this state to your User component
+    const [isProModalOpen, setIsProModalOpen] = useState(false);
+    const [selectedMonths, setSelectedMonths] = useState([]);
+    const [billingType, setBillingType] = useState('yearly'); // 'yearly' or 'monthly'
+
+    const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const handleProActivation = () => {
+        const months = billingType === 'yearly' ? allMonths : selectedMonths;
+
+        if (months.length === 0) {
+            alert("Please select at least one month.");
+            return;
+        }
+
+        // Redirect to the backend with the months as a query parameter
+        const params = new URLSearchParams({ months: months.join(',') });
+        window.location.href = `${route('pro.connect.drive')}?${params.toString()}`;
+    };
 
     useEffect(() => {
         let interval;
@@ -266,7 +267,10 @@ export default function User() {
                                             <li className="flex items-start"><CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" /><span>Advanced dashboards with richer weekly, monthly, and yearly insights</span></li>
                                         </ul>
                                         {!hasPro && (
-                                            <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors" onClick={() => window.location.href = route('pro.connect.drive')}>
+                                            <button
+                                                className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors"
+                                                onClick={() => setIsProModalOpen(true)}
+                                            >
                                                 Activate Pro
                                             </button>
                                         )}
@@ -328,6 +332,43 @@ export default function User() {
                     }
                 `}</style>
             </div>
+            <AnimatePresence>
+                {isProModalOpen && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                                <h3 className="text-lg font-bold">Configure Pro Plan</h3>
+                                <button onClick={() => setIsProModalOpen(false)}><X className="w-5 h-5"/></button>
+                            </div>
+                            <div className="p-6 space-y-6">
+                                {/* Toggle */}
+                                <div className="flex bg-gray-100 p-1 rounded-lg">
+                                    <button onClick={() => setBillingType('yearly')} className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${billingType === 'yearly' ? 'bg-white shadow-sm text-[#12b5e2]' : 'text-gray-500'}`}>Yearly (All Months)</button>
+                                    <button onClick={() => setBillingType('monthly')} className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${billingType === 'monthly' ? 'bg-white shadow-sm text-[#12b5e2]' : 'text-gray-500'}`}>Monthly (Select)</button>
+                                </div>
+
+                                {billingType === 'monthly' && (
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {allMonths.map(m => (
+                                            <button
+                                                key={m}
+                                                onClick={() => setSelectedMonths(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}
+                                                className={`py-2 text-xs border rounded-md transition-colors ${selectedMonths.includes(m) ? 'bg-[#12b5e2] border-[#12b5e2] text-white' : 'border-gray-200 text-gray-600 hover:border-[#12b5e2]'}`}
+                                            >
+                                                {m}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <button onClick={handleProActivation} className="w-full bg-[#12b5e2] text-white py-3 rounded-lg font-bold hover:bg-[#0ea5d3] transition-colors">
+                                    Connect Google Drive
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </UserLayout>
     );
 }

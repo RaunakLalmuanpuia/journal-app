@@ -18,6 +18,7 @@ class ProvisionUserDrive implements ShouldQueue
 
     protected $user;
     protected $plan;
+//    protected array $selectedMonths;
 
     /**
      * Increase the timeout for this specific job to 5 minutes (300 seconds)
@@ -25,10 +26,11 @@ class ProvisionUserDrive implements ShouldQueue
      */
     public $timeout = 300;
 
-    public function __construct(User $user, Plan $plan)
+    public function __construct(User $user, Plan $plan,protected array $selectedMonths)
     {
         $this->user = $user;
         $this->plan = $plan;
+        $this->selectedMonths = $selectedMonths;
     }
 
     public function handle()
@@ -36,7 +38,7 @@ class ProvisionUserDrive implements ShouldQueue
         Log::info("Starting Drive Provisioning for User: {$this->user->id}");
 
         try {
-            SheetCopyService::provisionFolderForUser($this->user, $this->plan);
+            SheetCopyService::provisionFolderForUser($this->user, $this->plan,$this->selectedMonths);
             // Optional: Send an email to the user saying drive synced.
             Log::info("Drive Provisioning Completed for User: {$this->user->id}");
         } catch (\Exception $e) {

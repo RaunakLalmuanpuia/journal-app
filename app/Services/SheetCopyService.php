@@ -5,26 +5,27 @@ namespace App\Services;
 use Google\Client;
 use Google\Service\Drive as GoogleDrive;
 use Google\Service\Drive\DriveFile;
-use Google\Service\Drive\Permission;
 use Google\Service\Sheets;
 use Google\Service\Sheets\ValueRange;
 use App\Models\User;
 use App\Models\Plan;
-use Exception;
 use Illuminate\Support\Facades\Log;
 
 class SheetCopyService
 {
-    public static function provisionFolderForUser(User $user, Plan $plan)
+    /**
+     * @param User $user
+     * @param Plan $plan
+     * @param array $selectedMonths Array of month strings, e.g., ['Jan', 'Feb']
+     */
+    public static function provisionFolderForUser(User $user, Plan $plan, array $selectedMonths = [])
     {
         // ------------------------------------------------------
         // 1. SETUP ACTORS
         // ------------------------------------------------------
-
         $userClient = self::getUserClient($user);
         $userDrive = new GoogleDrive($userClient);
 
-        // Bot Client (Reader)
         $botClient = new Client();
         $botClient->setClientId(config('services.google.bot_client_id'));
         $botClient->setClientSecret(config('services.google.bot_client_secret'));
@@ -36,7 +37,6 @@ class SheetCopyService
         // ------------------------------------------------------
         // 2. CREATE FOLDER (AS USER)
         // ------------------------------------------------------
-
         $ktjId = sprintf('KTJ%07d', $user->id);
         $year = now()->year;
         $userName = $user->name;
@@ -53,60 +53,42 @@ class SheetCopyService
             $newFolder = $userDrive->files->create($folderMetadata, [
                 'fields' => 'id, name, webViewLink'
             ]);
-
-            // SHARE FOLDER WITH BOT (Necessary for future operations if needed)
-//            $botEmail = config('services.google.bot_client_email');
-//            if (!empty($botEmail)) {
-//                try {
-//                    $permission = new Permission([
-//                        'type' => 'user',
-//                        'role' => 'writer',
-//                        'emailAddress' => $botEmail
-//                    ]);
-//                    $userDrive->permissions->create($newFolder->id, $permission, ['sendNotificationEmail' => false]);
-//                } catch (\Exception $e) {
-//                    Log::error("SHARING ERROR: " . $e->getMessage());
-//                }
-//            }
         } catch (\Google\Service\Exception $e) {
             Log::error('Google Drive Create Failed: ' . $e->getMessage());
             throw $e;
         }
 
         // ------------------------------------------------------
-        // 3. TRANSFER FILES (ALL TYPES)
+        // 3. TRANSFER FILES (WITH MONTH FILTERING)
         // ------------------------------------------------------
-
         $copyData = self::bridgeFiles(
             $botDrive,      // Reader (Bot)
             $userDrive,     // Writer (User)
             $templateFolderId,
-            $newFolder->id, // Destination
+            $newFolder->id,
             $userName,
-            $ktjId
+            $ktjId,
+            $selectedMonths
         );
 
         // ------------------------------------------------------
         // 4. POPULATE SHEETS (AS USER)
         // ------------------------------------------------------
-
-        // A. Populate Dashboard (Special Logic: E2, E3, E4, Links at E9)
         if ($copyData['dashboardId']) {
             self::populateDashboardSheet(
                 $userClient,
                 $copyData['dashboardId'],
-                $copyData['monthlySheets'], // List of sheets for links
+                $copyData['monthlySheets'], // Contains 'month' and 'url'
                 $userName,
                 $ktjId,
                 $planName
             );
         }
 
-        // B. Populate Monthly Sheets (Standard Logic: Fill F2 and F3)
         foreach ($copyData['monthlySheets'] as $sheet) {
             self::populateMonthlySheet(
                 $userClient,
-                $sheet['id'], // Use the file ID
+                $sheet['id'],
                 $userName,
                 $ktjId
             );
@@ -115,7 +97,6 @@ class SheetCopyService
         // ------------------------------------------------------
         // 5. SAVE TO DB
         // ------------------------------------------------------
-
         $resource = $user->driveResources()->create([
             'type' => 'folder',
             'google_file_id' => $newFolder->id,
@@ -127,7 +108,7 @@ class SheetCopyService
 
         foreach ($copyData['allFiles'] as $fileData) {
             $resource->files()->create([
-                'type' => $fileData['type'], // Now 'sheet' even for Dashboard
+                'type' => $fileData['type'],
                 'google_file_id' => $fileData['google_file_id'],
                 'name' => $fileData['name'],
                 'link' => $fileData['link']
@@ -137,25 +118,16 @@ class SheetCopyService
         return $newFolder;
     }
 
-    /**
-     * Copies ALL files (Sheets, Docs, Images, PDFs) from Bot to User.
-     */
-    /**
-     * Copies ALL files (Sheets, Docs, Images, PDFs) from Bot to User.
-     * Updated to support Shared Drives (Folders shared with the Bot).
-     */
-    private static function bridgeFiles(GoogleDrive $reader, GoogleDrive $writer, $sourceId, $destId, $userName, $userId)
+    private static function bridgeFiles(GoogleDrive $reader, GoogleDrive $writer, $sourceId, $destId, $userName, $userId, array $selectedMonths)
     {
         $dashboardId = null;
         $monthlySheets = [];
         $allFiles = [];
         $pageToken = null;
 
-        Log::info("--- STARTING BRIDGE FILES ---");
-        Log::info("Looking in Source Folder: {$sourceId}");
+        Log::info("--- STARTING BRIDGE FILES WITH MONTH FILTERING ---");
 
         do {
-            // 1. LIST FILES (Keep flags here - this works!)
             $response = $reader->files->listFiles([
                 'q' => "'{$sourceId}' in parents and trashed = false",
                 'fields' => 'nextPageToken, files(id, name, mimeType, webViewLink)',
@@ -164,97 +136,69 @@ class SheetCopyService
                 'includeItemsFromAllDrives' => true
             ]);
 
-            Log::info("Found " . count($response->files) . " files in this page.");
-
             foreach ($response->files as $file) {
+                // 1. Check if it's a Monthly Sheet and if it's selected
+                $isMonthly = preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i', $file->name, $matches);
+                $monthFound = $isMonthly ? ucfirst(strtolower($matches[1])) : null;
+
+                if ($isMonthly && !in_array($monthFound, $selectedMonths)) {
+                    Log::info("Skipping month: {$monthFound} (not in selection)");
+                    continue;
+                }
+
+                // 2. Prepare Naming
                 $newFileName = str_replace(['<Username>', '<User ID>'], [$userName, $userId], $file->name);
                 if ($newFileName === $file->name) {
                     $newFileName = "{$file->name} - {$userName}";
                 }
 
-                if ($file->mimeType === 'application/vnd.google-apps.shortcut') {
-                    Log::info("Skipping shortcut: {$file->name}");
-                    continue;
-                }
+                if ($file->mimeType === 'application/vnd.google-apps.shortcut') continue;
 
-                $fileContent = null;
-                $uploadMimeType = null;
-                $convertFile = false;
-
+                // 3. Download & Upload Logic
                 try {
-                    // --------------------------------------------------------
-                    // FIX: Separate Options for Export vs Get
-                    // --------------------------------------------------------
+                    $exportOptions = ['alt' => 'media'];
+                    $getOptions = ['alt' => 'media', 'supportsAllDrives' => true];
 
-                    // Options for EXPORT (Docs/Sheets) - CANNOT have 'supportsAllDrives'
-                    $exportOptions = [
-                        'alt' => 'media'
-                    ];
-
-                    // Options for GET (Binary files) - CAN have 'supportsAllDrives'
-                    $getOptions = [
-                        'alt' => 'media',
-                        'supportsAllDrives' => true
-                    ];
+                    $convertFile = false;
+                    $uploadMimeType = $file->mimeType;
 
                     if ($file->mimeType === 'application/vnd.google-apps.spreadsheet') {
-                        // Use exportOptions (No supportsAllDrives)
-                        $export = $reader->files->export(
-                            $file->id,
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            $exportOptions
-                        );
-                        $fileContent = $export->getBody()->getContents();
+                        $content = $reader->files->export($file->id, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $exportOptions);
+                        $fileContent = $content->getBody()->getContents();
                         $uploadMimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
                         $convertFile = true;
                     }
+                    // Handle Google Sheets
+                    if ($file->mimeType === 'application/vnd.google-apps.spreadsheet') {
+                        $content = $reader->files->export($file->id, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $exportOptions);
+                        $fileContent = $content->getBody()->getContents();
+                        $uploadMimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                        $convertFile = true;
+                    }
+                    // Handle Google Docs (This is what likely caused your error)
                     elseif ($file->mimeType === 'application/vnd.google-apps.document') {
-                        // Use exportOptions
-                        $export = $reader->files->export(
-                            $file->id,
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                            $exportOptions
-                        );
-                        $fileContent = $export->getBody()->getContents();
+                        $content = $reader->files->export($file->id, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', $exportOptions);
+                        $fileContent = $content->getBody()->getContents();
                         $uploadMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
                         $convertFile = true;
                     }
+                    // Handle Google Presentations
                     elseif ($file->mimeType === 'application/vnd.google-apps.presentation') {
-                        // Use exportOptions
-                        $export = $reader->files->export(
-                            $file->id,
-                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                            $exportOptions
-                        );
-                        $fileContent = $export->getBody()->getContents();
+                        $content = $reader->files->export($file->id, 'application/vnd.openxmlformats-officedocument.presentationml.presentation', $exportOptions);
+                        $fileContent = $content->getBody()->getContents();
                         $uploadMimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
                         $convertFile = true;
                     }
                     else {
-                        // Binary Files (PDFs, Images) -> Use getOptions (With supportsAllDrives)
                         $content = $reader->files->get($file->id, $getOptions);
                         $fileContent = $content->getBody()->getContents();
-                        $uploadMimeType = $file->mimeType;
-                        $convertFile = false;
                     }
-                } catch (\Exception $e) {
-                    Log::error("Failed to download {$file->name}: " . $e->getMessage());
-                    continue;
-                }
 
-                // 3. UPLOAD AS USER
-                $fileMetadataConfig = [
-                    'name' => $newFileName,
-                    'parents' => [$destId],
-                ];
+                    $fileMetadataConfig = ['name' => $newFileName, 'parents' => [$destId]];
+                    if ($convertFile) {
+                        $fileMetadataConfig['mimeType'] = $file->mimeType; // Convert back to Google format
+                    }
 
-                if ($convertFile) {
-                    if (str_contains($uploadMimeType, 'spreadsheet')) $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.spreadsheet';
-                    elseif (str_contains($uploadMimeType, 'wordprocessing')) $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.document';
-                    elseif (str_contains($uploadMimeType, 'presentation')) $fileMetadataConfig['mimeType'] = 'application/vnd.google-apps.presentation';
-                }
-
-                try {
                     $createdFile = $writer->files->create(new DriveFile($fileMetadataConfig), [
                         'data' => $fileContent,
                         'mimeType' => $uploadMimeType,
@@ -262,18 +206,18 @@ class SheetCopyService
                         'fields' => 'id, name, webViewLink, mimeType'
                     ]);
 
+                    // 4. Categorize for Dashboard and DB
                     $type = 'docs';
                     if ($createdFile->mimeType === 'application/vnd.google-apps.spreadsheet') {
-                        $isMonthly = preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i', $createdFile->name);
+                        $type = 'sheet';
                         if ($isMonthly) {
-                            $type = 'sheet';
                             $monthlySheets[] = [
                                 'id' => $createdFile->id,
                                 'name' => $createdFile->name,
+                                'month' => $monthFound,
                                 'url' => "https://docs.google.com/spreadsheets/d/{$createdFile->id}/edit"
                             ];
                         } else {
-                            $type = 'sheet';
                             $dashboardId = $createdFile->id;
                         }
                     }
@@ -285,10 +229,8 @@ class SheetCopyService
                         'type' => $type
                     ];
 
-                    Log::info("Copied: {$createdFile->name}");
-
                 } catch (\Exception $e) {
-                    Log::error("Failed to upload {$newFileName}: " . $e->getMessage());
+                    Log::error("Failed to copy {$file->name}: " . $e->getMessage());
                 }
             }
             $pageToken = $response->nextPageToken;
@@ -300,70 +242,40 @@ class SheetCopyService
             'allFiles' => $allFiles
         ];
     }
-     private static function getUserClient(User $user)
-    {
-        $client = new Client();
-        $client->setClientId(config('services.google.client_id'));
-        $client->setClientSecret(config('services.google.client_secret'));
-
-        $token = [
-            'access_token' => $user->googleAccount->access_token,
-            'refresh_token' => $user->googleAccount->refresh_token,
-            'expires_in'    => $user->googleAccount->token_expires_at->diffInSeconds(now(), false),
-            'created'       => $user->googleAccount->updated_at->timestamp,
-        ];
-
-        $client->setAccessToken($token);
-
-        if ($client->isAccessTokenExpired()) {
-            if (!$client->getRefreshToken()) {
-                throw new \Exception("User {$user->id} has no refresh token. Re-auth required.");
-            }
-            $newToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-            $user->googleAccount->update([
-                'access_token' => $newToken['access_token'],
-                'token_expires_at' => now()->addSeconds($newToken['expires_in'])
-            ]);
-        }
-
-        return $client;
-    }
 
     private static function populateDashboardSheet($client, $spreadsheetId, $monthlySheets, $userName, $userId, $planName)
     {
         $sheetsService = new Sheets($client);
 
-        // Sort months
-        $months = array_flip(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
-        usort($monthlySheets, function ($a, $b) use ($months) {
-            preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i', $a['name'], $mA);
-            preg_match('/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i', $b['name'], $mB);
-            $idxA = isset($mA[1]) ? ($months[ucfirst(strtolower($mA[1]))] ?? 99) : 99;
-            $idxB = isset($mB[1]) ? ($months[ucfirst(strtolower($mB[1]))] ?? 99) : 99;
-            return $idxA <=> $idxB;
-        });
+        // Sort months chronologically
+        $monthsMap = array_flip(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+        usort($monthlySheets, fn($a, $b) => ($monthsMap[$a['month']] ?? 99) <=> ($monthsMap[$b['month']] ?? 99));
 
-        $urlValues = array_map(fn($sheet) => [$sheet['url']], $monthlySheets);
+        // Prepare rows: Column D is Name, Column E is URL
+        $dashboardRows = array_map(fn($sheet) => [$sheet['month'], $sheet['url']], $monthlySheets);
 
-        // Build Batch Update for Dashboard
         $data = [
             ['range' => 'E2', 'values' => [[$userName]]],
             ['range' => 'E3', 'values' => [[$userId]]],
             ['range' => 'E4', 'values' => [[$planName]]],
-            // Links start at E9
         ];
 
-        if (!empty($urlValues)) {
-            $data[] = ['range' => 'E9', 'values' => $urlValues];
+        if (!empty($dashboardRows)) {
+            $startRow = 10;
+            // Calculation: StartRow + Count - 1.
+            // Example: 10 + 3 months - 1 = Row 12. Range: D10:E12
+            $endRow = $startRow + count($dashboardRows) - 1;
+
+            $data[] = [
+                'range' => "D{$startRow}:E{$endRow}",
+                'values' => $dashboardRows
+            ];
         }
 
-        $batchRequests = [];
-        foreach ($data as $item) {
-            $batchRequests[] = new ValueRange([
-                'range' => $item['range'],
-                'values' => $item['values']
-            ]);
-        }
+        $batchRequests = array_map(fn($item) => new ValueRange([
+            'range' => $item['range'],
+            'values' => $item['values']
+        ]), $data);
 
         $body = new \Google\Service\Sheets\BatchUpdateValuesRequest([
             'valueInputOption' => 'USER_ENTERED',
@@ -373,35 +285,46 @@ class SheetCopyService
         $sheetsService->spreadsheets_values->batchUpdate($spreadsheetId, $body);
     }
 
-    /**
-     * Fills F2 with Username and F3 with User ID for standard monthly sheets.
-     */
+    private static function getUserClient(User $user)
+    {
+        $client = new Client();
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
+
+        $ga = $user->googleAccount;
+        $token = [
+            'access_token' => $ga->access_token,
+            'refresh_token' => $ga->refresh_token,
+            'expires_in'    => $ga->token_expires_at->diffInSeconds(now(), false),
+            'created'       => $ga->updated_at->timestamp,
+        ];
+
+        $client->setAccessToken($token);
+
+        if ($client->isAccessTokenExpired()) {
+            $newToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+            $ga->update([
+                'access_token' => $newToken['access_token'],
+                'token_expires_at' => now()->addSeconds($newToken['expires_in'])
+            ]);
+        }
+
+        return $client;
+    }
+
     private static function populateMonthlySheet($client, $spreadsheetId, $userName, $userId)
     {
         $sheetsService = new Sheets($client);
-
         $data = [
             ['range' => 'F2', 'values' => [[$userName]]],
             ['range' => 'F3', 'values' => [[$userId]]],
         ];
 
-        $batchRequests = [];
-        foreach ($data as $item) {
-            $batchRequests[] = new ValueRange([
-                'range' => $item['range'],
-                'values' => $item['values']
-            ]);
-        }
-
         $body = new \Google\Service\Sheets\BatchUpdateValuesRequest([
             'valueInputOption' => 'USER_ENTERED',
-            'data' => $batchRequests
+            'data' => array_map(fn($item) => new ValueRange($item), $data)
         ]);
 
-        try {
-            $sheetsService->spreadsheets_values->batchUpdate($spreadsheetId, $body);
-        } catch (\Exception $e) {
-            Log::error("Failed to populate monthly sheet {$spreadsheetId}: " . $e->getMessage());
-        }
+        $sheetsService->spreadsheets_values->batchUpdate($spreadsheetId, $body);
     }
 }
