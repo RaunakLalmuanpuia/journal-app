@@ -10,7 +10,7 @@ use Google\Service\Sheets\ValueRange;
 use App\Models\User;
 use App\Models\Plan;
 use Illuminate\Support\Facades\Log;
-
+use Google\Service\Drive\Permission;
 class SheetCopyService
 {
     /**
@@ -53,6 +53,20 @@ class SheetCopyService
             $newFolder = $userDrive->files->create($folderMetadata, [
                 'fields' => 'id, name, webViewLink'
             ]);
+            // SHARE FOLDER WITH BOT (Necessary for future operations if needed)
+//            $botEmail = config('services.google.bot_client_email');
+//            if (!empty($botEmail)) {
+//                try {
+//                    $permission = new Permission([
+//                        'type' => 'user',
+//                        'role' => 'writer',
+//                        'emailAddress' => $botEmail
+//                    ]);
+//                    $userDrive->permissions->create($newFolder->id, $permission, ['sendNotificationEmail' => false]);
+//                } catch (\Exception $e) {
+//                    Log::error("SHARING ERROR: " . $e->getMessage());
+//                }
+//            }
         } catch (\Google\Service\Exception $e) {
             Log::error('Google Drive Create Failed: ' . $e->getMessage());
             throw $e;
