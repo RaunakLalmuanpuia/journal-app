@@ -6,15 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Post extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id','title','subtitle','description','content','featured_image',
-        'status','is_featured','category','tags',
-        'seo_title','seo_description','seo_keywords','published_at'
+        'user_id', 'title', 'subtitle', 'description', 'content', 'featured_image',
+        'status', 'is_featured', 'category', 'tags', 'slug',
+        'seo_title', 'seo_description', 'seo_keywords', 'published_at'
     ];
 
     protected $casts = [
@@ -23,6 +24,17 @@ class Post extends Model
         'is_featured' => 'boolean',
         'published_at' => 'datetime',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        // Automatically create a slug when creating a post
+        static::creating(function ($post) {
+            if (empty($post->slug)) {
+                $post->slug = Str::slug($post->title);
+            }
+        });
+    }
 
     public function comments(): HasMany
     {

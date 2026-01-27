@@ -32,42 +32,57 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show($id)
+    /**
+     * Display the specified post using Route Model Binding.
+     * * @param  \App\Models\Post  $post (Laravel finds this automatically via the slug)
+     * @return \Inertia\Response
+     */
+    public function show(Post $post)
     {
+        // Check if post is published; if not, 404 (unless you want admins to see drafts)
+        if ($post->status !== 'published') {
+            abort(404);
+        }
 
         $userId = auth()->id();
-        // 2. Add ->with('author') here too (for the single post page)
-        $post = Post::query()
-            ->with([ 'author:id,name,avatar'])
-            ->with(['comments' => function ($query) use ($userId) {
+
+        // Load necessary relationships onto the existing $post instance
+        $post->load([
+            'author:id,name,avatar',
+            'comments' => function ($query) use ($userId) {
                 $query->whereNull('parent_id')
+                    ->where('is_approved', true) // Safety check for approval
                     ->orderBy('created_at', 'desc')
                     ->with([
                         'user:id,name,avatar',
-                        // Load the replies recursively
-                        'replies' => function($q) use ($userId) {
+                        'replies' => function ($q) use ($userId) {
                             $q->with('user:id,name,avatar')
                                 ->withCount('likes')
-                                ->withExists(['likes as is_liked' => function($subQ) use ($userId) {
+                                ->withExists(['likes as is_liked' => function ($subQ) use ($userId) {
                                     $subQ->where('user_id', $userId);
                                 }]);
                         }
                     ])
                     ->withCount('likes')
-                    ->withExists(['likes as is_liked' => function($q) use ($userId) {
+                    ->withExists(['likes as is_liked' => function ($q) use ($userId) {
                         $q->where('user_id', $userId);
                     }]);
-            }])
-            ->where('id', $id)
-            ->where('status', 'published')
-            ->firstOrFail();
+            }
+        ]);
 
-//        dd($post);
-
+        // Track views
         $post->increment('views');
 
         return Inertia::render('Frontend/Blog/Show', [
             'post' => $post,
+            // SEO Data object for the frontend <Head>
+            'seo' => [
+                'title' => $post->seo_title ?? $post->title,
+                'description' => $post->seo_description ?? $post->description,
+                'keywords' => $post->seo_keywords,
+                'image' => $post->featured_image ? asset('storage/' . $post->featured_image) : null,
+                'canonical' => route('blog.show', $post->slug),
+            ],
             'readTime' => ceil(str_word_count(strip_tags($post->content)) / 200),
         ]);
     }

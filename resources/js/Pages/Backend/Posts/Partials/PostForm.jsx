@@ -332,37 +332,37 @@ export default function PostForm({ data, setData, errors, processing, onClose, o
                         </Card>
 
                         {/* SEO Settings (New) */}
-                        <Card>
-                            <CardHeader className="flex items-center gap-2">
-                                <Search className="w-4 h-4 text-gray-500" />
-                                <CardTitle>SEO Settings</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <InputLabel value="SEO Title" className="mb-1 text-xs uppercase text-gray-500" />
-                                    <TextInput value={data.seo_title || ''} onChange={e => setData('seo_title', e.target.value)} className="w-full text-sm" placeholder="Meta Title" />
-                                </div>
-                                <div>
-                                    <InputLabel value="SEO Description" className="mb-1 text-xs uppercase text-gray-500" />
-                                    <textarea
-                                        value={data.seo_description || ''}
-                                        onChange={e => setData('seo_description', e.target.value)}
-                                        className="w-full border-gray-300 rounded-md text-sm h-20"
-                                        placeholder="Meta Description"
-                                    />
-                                </div>
-                                <div>
-                                    <InputLabel value="SEO Keywords" className="mb-1 text-xs uppercase text-gray-500" />
-                                    <div className="flex gap-2 mb-2">
-                                        <TextInput value={seoKeywordInput} onChange={e => setSeoKeywordInput(e.target.value)} onKeyDown={addSeo} placeholder="Add keyword..." className="flex-1 text-sm h-9" />
-                                        <button onClick={() => addSeo({key:'Enter', preventDefault:()=>{}})} className="bg-gray-100 px-3 rounded hover:bg-gray-200"><Plus className="w-4 h-4"/></button>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1">
-                                        {data.seo_keywords?.map(k => <Badge key={k} onRemove={() => removeSeo(k)}>{k}</Badge>)}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {/*<Card>*/}
+                        {/*    <CardHeader className="flex items-center gap-2">*/}
+                        {/*        <Search className="w-4 h-4 text-gray-500" />*/}
+                        {/*        <CardTitle>SEO Settings</CardTitle>*/}
+                        {/*    </CardHeader>*/}
+                        {/*    <CardContent className="space-y-4">*/}
+                        {/*        <div>*/}
+                        {/*            <InputLabel value="SEO Title" className="mb-1 text-xs uppercase text-gray-500" />*/}
+                        {/*            <TextInput value={data.seo_title || ''} onChange={e => setData('seo_title', e.target.value)} className="w-full text-sm" placeholder="Meta Title" />*/}
+                        {/*        </div>*/}
+                        {/*        <div>*/}
+                        {/*            <InputLabel value="SEO Description" className="mb-1 text-xs uppercase text-gray-500" />*/}
+                        {/*            <textarea*/}
+                        {/*                value={data.seo_description || ''}*/}
+                        {/*                onChange={e => setData('seo_description', e.target.value)}*/}
+                        {/*                className="w-full border-gray-300 rounded-md text-sm h-20"*/}
+                        {/*                placeholder="Meta Description"*/}
+                        {/*            />*/}
+                        {/*        </div>*/}
+                        {/*        <div>*/}
+                        {/*            <InputLabel value="SEO Keywords" className="mb-1 text-xs uppercase text-gray-500" />*/}
+                        {/*            <div className="flex gap-2 mb-2">*/}
+                        {/*                <TextInput value={seoKeywordInput} onChange={e => setSeoKeywordInput(e.target.value)} onKeyDown={addSeo} placeholder="Add keyword..." className="flex-1 text-sm h-9" />*/}
+                        {/*                <button onClick={() => addSeo({key:'Enter', preventDefault:()=>{}})} className="bg-gray-100 px-3 rounded hover:bg-gray-200"><Plus className="w-4 h-4"/></button>*/}
+                        {/*            </div>*/}
+                        {/*            <div className="flex flex-wrap gap-1">*/}
+                        {/*                {data.seo_keywords?.map(k => <Badge key={k} onRemove={() => removeSeo(k)}>{k}</Badge>)}*/}
+                        {/*            </div>*/}
+                        {/*        </div>*/}
+                        {/*    </CardContent>*/}
+                        {/*</Card>*/}
                     </div>
                 </div>
             </div>

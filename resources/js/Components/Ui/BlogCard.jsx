@@ -37,7 +37,7 @@ export default function BlogCard({ post }) {
     const readTime = Math.ceil((post.content?.length || 0) / 1000) || 1;
 
     const handleShare = async (platform) => {
-        const postUrl = window.location.origin + route('blog.show', post.id);
+        const postUrl = window.location.origin + route('blog.show', post);
         if (platform === "copy-link") {
             await navigator.clipboard.writeText(postUrl);
             setShareMessage("Link copied to clipboard!");
@@ -60,7 +60,7 @@ export default function BlogCard({ post }) {
         >
             <div
                 className="h-full bg-white rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden group cursor-pointer flex flex-col"
-                onClick={() => (window.location.href = route("blog.show", post.id))}
+                onClick={() => (window.location.href = route("blog.show", post))}
             >
                 {/* Featured Image */}
                 <div className="relative h-48 overflow-hidden bg-gray-100">
@@ -93,8 +93,8 @@ export default function BlogCard({ post }) {
                         <div className="flex items-center space-x-1 text-xs text-gray-500">
                             <Calendar className="w-3 h-3" />
                             <span>
-                                {post.created_at
-                                    ? format(new Date(post.created_at), 'MMM d, yyyy')
+                                {post.published_at
+                                    ? format(new Date(post.published_at), 'MMM d, yyyy')
                                     : 'Recently'
                                 }
                             </span>
@@ -204,7 +204,7 @@ export default function BlogCard({ post }) {
                         </div>
 
                         <Link
-                            href={route('blog.show', post.id)}
+                            href={route('blog.show', post)}
                             onClick={(e) => e.stopPropagation()}
                             className="inline-flex items-center space-x-1 bg-[#12b5e2] hover:bg-[#0ea5cd] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
                         >

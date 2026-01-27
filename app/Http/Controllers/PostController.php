@@ -25,6 +25,13 @@ class PostController extends Controller
         // Assign the currently authenticated user's ID
         $data['user_id'] = auth()->id();
 
+        $data['slug'] = $request->slug ? Str::slug($request->slug) : Str::slug($request->title);
+
+        // 2. Set published_at if status is 'published'
+        if ($data['status'] === 'published') {
+            $data['published_at'] = now();
+        }
+
         Post::create($data);
 
         return redirect()->back();
@@ -34,6 +41,17 @@ class PostController extends Controller
     {
         $data = $this->validatePost($request);
         $data = $this->handleImageUpload($request, $data, $post);
+
+        // PROFESSIONAL SEO ADDITION:
+        // Update slug only if title changes or manual slug is provided
+        if ($request->title !== $post->title || $request->slug) {
+            $data['slug'] = Str::slug($request->slug ?? $request->title);
+        }
+
+        // Set published_at ONLY if it wasn't set before and is now being published
+        if ($data['status'] === 'published' && !$post->published_at) {
+            $data['published_at'] = now();
+        }
 
         $post->update($data);
 

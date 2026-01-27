@@ -228,7 +228,9 @@ const CommentItem = ({ comment, postId, depth = 0 }) => {
 };
 
 // --- Main Component ---
-export default function BlogShow({ post, readTime }) {
+export default function BlogShow({ post,seo, readTime }) {
+
+
     const { auth } = usePage().props;
 
     // Main Comment Form (Root Level)
@@ -266,7 +268,35 @@ export default function BlogShow({ post, readTime }) {
 
     return (
         <GuestLayout>
-            <Head title={post.title} />
+            <Head>
+                <title>{seo.title}</title>
+                <meta name="description" content={seo.description} />
+                {post.tags && post.tags.length > 0 && (
+                    <meta name="keywords" content={post.tags.join(', ')} />
+                )}
+                <link rel="canonical" href={seo.canonical} />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="article" />
+                <meta property="og:title" content={seo.title} />
+                <meta property="og:description" content={seo.description} />
+                <meta property="og:url" content={seo.canonical} />
+                <meta property="og:site_name" content="Your Blog Name" />
+                {seo.image && <meta property="og:image" content={seo.image} />}
+
+                {/* Twitter */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={seo.title} />
+                <meta name="twitter:description" content={seo.description} />
+                {seo.image && <meta name="twitter:image" content={seo.image} />}
+
+                {/* Article Specific Metadata */}
+                <meta property="article:published_time" content={post.published_at} />
+                <meta property="article:author" content={post.author?.name} />
+                {post.tags && post.tags.map(tag => (
+                    <meta property="article:tag" content={tag} key={tag} />
+                ))}
+            </Head>
 
             <div className="min-h-screen bg-gray-50">
                 <article className="relative max-w-3xl md:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-20">
@@ -296,10 +326,10 @@ export default function BlogShow({ post, readTime }) {
                             <div className="flex items-center">
                                 <Calendar className="w-4 h-4 mr-1"/>
                                 <span>
-                  {post.published_at
-                      ? formatDistanceToNow(new Date(post.published_at)) + " ago"
-                      : "Just now"}
-                </span>
+                                  {post.published_at
+                                      ? formatDistanceToNow(new Date(post.published_at)) + " ago"
+                                      : "Just now"}
+                                </span>
                             </div>
                             <div className="flex items-center">
                                 <Clock className="w-4 h-4 mr-1"/>
