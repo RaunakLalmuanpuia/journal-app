@@ -46,6 +46,11 @@ class BlogController extends Controller
 
         $userId = auth()->id();
 
+        $post->loadCount('likedBy as total_likes');
+        $post->loadExists(['likedBy as is_liked' => function($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }]);
+
         // Load necessary relationships onto the existing $post instance
         $post->load([
             'author:id,name,avatar',
@@ -109,5 +114,16 @@ class BlogController extends Controller
             'success' => true,
             'data' => $posts
         ]);
+    }
+
+    public function toggleLike(Post $post)
+    {
+        // Only authenticated users can reach this (protected by middleware)
+        $user = auth()->user();
+
+        // toggle() returns an array showing if it attached or detached the record
+        $post->likedBy()->toggle($user->id);
+
+        return redirect()->back();
     }
 }

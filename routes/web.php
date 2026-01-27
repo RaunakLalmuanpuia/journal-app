@@ -116,6 +116,8 @@ Route::get('/internal/latest-posts', [BlogController::class, 'getLatestPostsJson
     ->name('internal.posts.latest');
 
 
+Route::post('/blog/{post}/like', [BlogController::class, 'toggleLike'])->name('posts.like')->middleware(['auth']);
+
 Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
     ->name('comments.store')
     ->middleware(['auth', 'verified']);

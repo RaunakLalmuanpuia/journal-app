@@ -239,6 +239,12 @@ export default function BlogShow({ post,seo, readTime }) {
         parent_id: null
     });
 
+    const handleToggleLike = () => {
+        router.post(route('posts.like', post.id), {}, {
+            preserveScroll: true,
+        });
+    };
+
     const handleAddComment = () => {
         submitComment(route('comments.store', post.id), {
             onSuccess: () => reset(),
@@ -381,9 +387,15 @@ export default function BlogShow({ post,seo, readTime }) {
                     >
                         {/* Note: Inertia requires a manual Like implementation via router.post if you want interactivity here */}
                         <button
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                            <Heart className="w-4 h-4 mr-2"/>
-                            {post.likes || 0} Likes
+                            onClick={handleToggleLike}
+                            className={`inline-flex items-center px-4 py-2 border rounded-md text-sm font-medium transition-all ${
+                                post.is_liked
+                                    ? 'bg-green-50 border-green-200 text-green-600'
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                            <Heart className={`w-4 h-4 mr-2 ${post.is_liked ? 'fill-current' : ''}`} />
+                            {post.total_likes || 0} {post.total_likes === 1 ? 'Like' : 'Likes'}
                         </button>
 
                         <button
