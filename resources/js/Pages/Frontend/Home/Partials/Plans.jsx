@@ -133,7 +133,7 @@ export default function Plans() {
                             <div className="mb-8 text-center min-h-[140px] flex flex-col justify-center">
                                 {plan.priceType === 'standard' && (
                                     <div className="py-4">
-                                        <div className="text-slate-500 font-medium text-lg mb-1">{plan.price}</div>
+                                        {/*<div className="text-slate-500 font-medium text-lg mb-1">{plan.price}</div>*/}
                                         <div className="text-4xl font-extrabold text-slate-900 flex justify-center items-baseline gap-2">
                                             {plan.priceSubtitle}
                                             <span className="text-lg font-normal text-slate-500">{plan.priceSubtitleSuffix}</span>
@@ -145,9 +145,9 @@ export default function Plans() {
                                 {plan.priceType === 'promo' && (
                                     <div className="flex flex-col items-center">
                                         <div className="w-full bg-cyan-50 rounded-lg p-4 mb-3 border border-cyan-100">
-                                            <span className="text-slate-400 text-3xl font-bold line-through decoration-slate-400 decoration-2">
-                                                {plan.originalPrice}
-                                            </span>
+                                            {/*<span className="text-slate-400 text-3xl font-bold line-through decoration-slate-400 decoration-2">*/}
+                                            {/*    {plan.originalPrice}*/}
+                                            {/*</span>*/}
                                             <div className="text-3xl font-extrabold text-cyan-500 mt-1">
                                                 {plan.price}
                                             </div>
