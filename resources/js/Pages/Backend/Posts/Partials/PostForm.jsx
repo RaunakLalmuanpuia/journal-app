@@ -294,13 +294,24 @@ export default function PostForm({ data, setData, errors, processing, onClose, o
                                         <option value="archived">Archived</option>
                                     </select>
                                 </div>
+                                {/* CHANGED: Category is now a TextInput instead of a select dropdown */}
                                 <div>
                                     <InputLabel value="Category" className="mb-1"/>
-                                    <select value={data.category} onChange={e => setData('category', e.target.value)} className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md text-sm">
-                                        <option value="">Select Category...</option>
-                                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
+                                    <TextInput
+                                        value={data.category || ''}
+                                        onChange={e => setData('category', e.target.value)}
+                                        className="w-full text-sm"
+                                        placeholder="e.g. Technology, Lifestyle..."
+                                    />
+                                    {errors.category && <p className="text-sm text-red-600 mt-1">{errors.category}</p>}
                                 </div>
+                                {/*<div>*/}
+                                {/*    <InputLabel value="Category" className="mb-1"/>*/}
+                                {/*    <select value={data.category} onChange={e => setData('category', e.target.value)} className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md text-sm">*/}
+                                {/*        <option value="">Select Category...</option>*/}
+                                {/*        {categories.map(c => <option key={c} value={c}>{c}</option>)}*/}
+                                {/*    </select>*/}
+                                {/*</div>*/}
                                 <div className="flex items-center space-x-2 pt-2 border-t mt-2">
                                     <input
                                         type="checkbox"
