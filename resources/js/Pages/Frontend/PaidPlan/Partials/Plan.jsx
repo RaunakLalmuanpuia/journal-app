@@ -56,7 +56,7 @@ export const Plan = () => {
                                             </div>
 
                                             <div className="text-5xl lg:text-6xl font-black text-[#12b5e2] mb-3">
-                                                Free for 2025
+                                                Free for 2026
                                             </div>
 
                                             <div className="space-y-1">

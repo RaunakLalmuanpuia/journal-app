@@ -24,6 +24,9 @@ export default function Home({ auth, laravelVersion, phpVersion }) {
                 {/* Hero / Introduction */}
                 <Intro />
 
+                {/* Plans */}
+                <Plans />
+
                 {/* Explanation of Process */}
                 <Process />
 
@@ -31,8 +34,7 @@ export default function Home({ auth, laravelVersion, phpVersion }) {
                 {/* Video Presentation */}
                 <Video />
 
-                {/* Plans */}
-                <Plans />
+
 
                 {/* Data Visualization or Graphics */}
                 <Visualize />

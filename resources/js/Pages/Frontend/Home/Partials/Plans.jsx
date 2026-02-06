@@ -30,7 +30,7 @@ export default function Plans() {
             price: "$0",
             priceSubtitle: "Free",
             priceSubtitleSuffix: "forever",
-            subText: "No credit card required • Start immediately",
+            subText: "Start immediately",
             buttonText: "Go Free",
             buttonColor: "bg-slate-600 hover:bg-slate-700",
             features: [
@@ -160,7 +160,7 @@ export default function Plans() {
                                         {plan.showStandardPricing && (
                                             <button className="flex items-center gap-1 text-xs text-slate-500 hover:text-cyan-600 transition-colors mt-1">
                                                 <BookOpenIcon className="w-3 h-3" />
-                                                <span className="underline decoration-dotted">Standard pricing</span>
+                                                <span className="underline decoration-dotted">No credit card required</span>
                                             </button>
                                         )}
                                     </div>
