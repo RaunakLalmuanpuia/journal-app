@@ -9,17 +9,11 @@ import {
     FolderCheck,
     Check,
     X,
-    // --- NEW IMPORTS START ---
     BookOpen,
     Maximize2,
     Minimize2,
     FileText,
-    Sheet,
-    Presentation,
-    FileQuestion,
-    LayoutDashboard,
     File as FileGeneric
-    // --- NEW IMPORTS END ---
 } from 'lucide-react';
 import UserLayout from '@/Layouts/UserLayout';
 import { usePage, router, useForm } from "@inertiajs/react";
