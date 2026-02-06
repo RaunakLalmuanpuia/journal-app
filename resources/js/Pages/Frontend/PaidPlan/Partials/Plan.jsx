@@ -74,7 +74,7 @@ export const Plan = () => {
                                         </button>
 
                                         <div className="mt-6 text-xs text-gray-400 space-y-1 font-medium">
-                                            <p>Full 2025 access • No card required</p>
+                                            <p>Full 2026 access • No card required</p>
                                             <p>Instant activation upon dashboard entry</p>
                                         </div>
                                     </div>

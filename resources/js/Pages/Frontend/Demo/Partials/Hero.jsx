@@ -42,7 +42,7 @@ export default function Hero({ onOpenVideo }) {
     };
 
     return (
-        <section className="py-20 bg-white">
+        <section className="py-20 pt-32 bg-white">
             <div className="max-w-6xl mx-auto px-6">
                 <div className="text-center mb-16">
                     <h1 className="text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6">

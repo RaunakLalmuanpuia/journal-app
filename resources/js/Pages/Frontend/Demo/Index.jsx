@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head } from "@inertiajs/react";
 import Hero from "./Partials/Hero";
+import Plans from "./Partials/Plans";
 import Features from "./Partials/Features";
 import Video from "./Partials/Video";
 import LatestBlogPosts from '@/Components/Commons/LatestBlogPosts';
@@ -17,7 +18,9 @@ export default function Demo() {
                 {/* Hero Section - Passing the open function */}
                 <Hero onOpenVideo={() => setIsVideoModalOpen(true)} />
 
-                <Features />
+                <Plans />
+
+                {/*<Features />*/}
 
                 <Video/>
 
