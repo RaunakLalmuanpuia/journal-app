@@ -103,12 +103,12 @@ class BlogController extends Controller
             ->get();
 
         // Transform image path logic
-        $posts->transform(function ($post) {
-            if ($post->featured_image && !str_starts_with($post->featured_image, 'http')) {
-                $post->featured_image = '/storage/' . $post->featured_image;
-            }
-            return $post;
-        });
+//        $posts->transform(function ($post) {
+//            if ($post->featured_image && !str_starts_with($post->featured_image, 'http')) {
+//                $post->featured_image = '/storage/' . $post->featured_image;
+//            }
+//            return $post;
+//        });
 
         return response()->json([
             'success' => true,

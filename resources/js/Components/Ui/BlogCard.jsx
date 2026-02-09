@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, {useMemo, useState} from "react";
 import { Link } from "@inertiajs/react";
 import {
     Share2,
@@ -51,6 +51,30 @@ export default function BlogCard({ post }) {
         setShowShareDropdown(false);
     };
 
+    const featuredImageUrl = useMemo(() => {
+        if (!post.featured_image) return null;
+
+        // New upload
+        if (post.featured_image instanceof File) {
+            return URL.createObjectURL(post.featured_image);
+        }
+
+        // Already stored image (edit mode)
+        if (typeof post.featured_image === 'string') {
+            // If already full URL
+            if (post.featured_image.startsWith('http')) {
+                return post.featured_image;
+            }
+
+            // Stored path like "posts/xxx.png"
+            return `/storage/${post.featured_image}`;
+        }
+
+        return null;
+    }, [post.featured_image]);
+
+
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -66,7 +90,7 @@ export default function BlogCard({ post }) {
                 <div className="relative h-48 overflow-hidden bg-gray-100">
                     {!imageError && post.featured_image ? (
                         <img
-                            src={`/storage/${post.featured_image}`}
+                            src={featuredImageUrl}
                             alt={post.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={() => setImageError(true)}
