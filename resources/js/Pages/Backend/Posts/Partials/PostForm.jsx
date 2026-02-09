@@ -106,6 +106,29 @@ export default function PostForm({ data, setData, errors, processing, onClose, o
         setTimeout(() => { if (onSubmit) onSubmit(); }, 100);
     };
 
+    const featuredImageUrl = useMemo(() => {
+        if (!data.featured_image) return null;
+
+        // New upload
+        if (data.featured_image instanceof File) {
+            return URL.createObjectURL(data.featured_image);
+        }
+
+        // Already stored image (edit mode)
+        if (typeof data.featured_image === 'string') {
+            // If already full URL
+            if (data.featured_image.startsWith('http')) {
+                return data.featured_image;
+            }
+
+            // Stored path like "posts/xxx.png"
+            return `/storage/${data.featured_image}`;
+        }
+
+        return null;
+    }, [data.featured_image]);
+
+
     return (
         <div className="flex flex-col h-full bg-white sm:rounded-lg overflow-hidden">
             {/* --- HEADER --- */}
@@ -211,14 +234,12 @@ export default function PostForm({ data, setData, errors, processing, onClose, o
 
                                             {/* Preview Logic */}
                                             <div className="mt-2">
-                                                {/* Preview if it's a URL String */}
-                                                {typeof data.featured_image === 'string' && data.featured_image.startsWith('http') && (
-                                                    <img src={data.featured_image} alt="Preview" className="h-32 rounded object-cover border" />
-                                                )}
-
-                                                {/* Preview if it's a newly uploaded File object */}
-                                                {data.featured_image instanceof File && (
-                                                    <img src={URL.createObjectURL(data.featured_image)} alt="New File Preview" className="h-32 rounded object-cover border" />
+                                                {featuredImageUrl && (
+                                                    <img
+                                                        src={featuredImageUrl}
+                                                        alt="Featured Preview"
+                                                        className="h-32 rounded object-cover border"
+                                                    />
                                                 )}
                                             </div>
                                         </div>
@@ -263,8 +284,12 @@ export default function PostForm({ data, setData, errors, processing, onClose, o
                                         {data.description && <p className="text-base text-gray-500 leading-relaxed">{data.description}</p>}
                                     </header>
                                     {/* Featured Image */}
-                                    {typeof data.featured_image === 'string' && data.featured_image.startsWith('http') && (
-                                        <div className="mb-10"><img src={data.featured_image} alt="Featured" className="object-cover w-full h-auto rounded-lg" /></div>
+                                    {/*{typeof data.featured_image === 'string' && data.featured_image.startsWith('http') && (*/}
+                                    {/*    <div className="mb-10"><img src={data.featured_image} alt="Featured" className="object-cover w-full h-auto rounded-lg" /></div>*/}
+                                    {/*)}*/}
+                                    {featuredImageUrl && (
+                                        <div className="mb-10"><img src={featuredImageUrl} alt="Featured" className="object-cover w-full h-auto rounded-lg" /></div>
+
                                     )}
                                     {/* Content */}
                                     <div className={TYPOGRAPHY_CLASSES} dangerouslySetInnerHTML={{ __html: data.content }} />

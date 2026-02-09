@@ -370,9 +370,9 @@ export default function BlogShow({ post,seo, readTime }) {
                         >
                             <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm">
                                 <img
-                                    src={post.featured_image}
+                                    src={`/storage/${post.featured_image}`}
                                     alt={post.title}
-                                    className="object-cover w-full h-full"
+                                    className="object-cover w-full h-auto rounded-lg"
                                 />
                             </div>
                         </motion.div>
