@@ -78,64 +78,64 @@ export default function Login({ status, canResetPassword }) {
 
 
 
-                        {/* Actual Breeze Form Logic */}  <form onSubmit={submit} className="space-y-4">
-                            <div>
-                                <InputLabel htmlFor="email" value="Email" />
-                                <TextInput
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    value={data.email}
-                                    className="mt-1 block w-full rounded-sm border-gray-300 focus:border-sky-500 focus:ring-sky-500"
-                                    autoComplete="username"
-                                    isFocused={true}
-                                    onChange={(e) => setData('email', e.target.value)}
-                                />
-                                <InputError message={errors.email} className="mt-2" />
-                            </div>
+                        {/*/!* Actual Breeze Form Logic *!/  <form onSubmit={submit} className="space-y-4">*/}
+                        {/*    <div>*/}
+                        {/*        <InputLabel htmlFor="email" value="Email" />*/}
+                        {/*        <TextInput*/}
+                        {/*            id="email"*/}
+                        {/*            type="email"*/}
+                        {/*            name="email"*/}
+                        {/*            value={data.email}*/}
+                        {/*            className="mt-1 block w-full rounded-sm border-gray-300 focus:border-sky-500 focus:ring-sky-500"*/}
+                        {/*            autoComplete="username"*/}
+                        {/*            isFocused={true}*/}
+                        {/*            onChange={(e) => setData('email', e.target.value)}*/}
+                        {/*        />*/}
+                        {/*        <InputError message={errors.email} className="mt-2" />*/}
+                        {/*    </div>*/}
 
-                            <div>
-                                <InputLabel htmlFor="password" value="Password" />
-                                <TextInput
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    value={data.password}
-                                    className="mt-1 block w-full rounded-sm border-gray-300 focus:border-sky-500 focus:ring-sky-500"
-                                    autoComplete="current-password"
-                                    onChange={(e) => setData('password', e.target.value)}
-                                />
-                                <InputError message={errors.password} className="mt-2" />
-                            </div>
+                        {/*    <div>*/}
+                        {/*        <InputLabel htmlFor="password" value="Password" />*/}
+                        {/*        <TextInput*/}
+                        {/*            id="password"*/}
+                        {/*            type="password"*/}
+                        {/*            name="password"*/}
+                        {/*            value={data.password}*/}
+                        {/*            className="mt-1 block w-full rounded-sm border-gray-300 focus:border-sky-500 focus:ring-sky-500"*/}
+                        {/*            autoComplete="current-password"*/}
+                        {/*            onChange={(e) => setData('password', e.target.value)}*/}
+                        {/*        />*/}
+                        {/*        <InputError message={errors.password} className="mt-2" />*/}
+                        {/*    </div>*/}
 
-                            <div className="flex items-center justify-between">
-                                <label className="flex items-center">
-                                    <Checkbox
-                                        name="remember"
-                                        checked={data.remember}
-                                        onChange={(e) => setData('remember', e.target.checked)}
-                                        className="text-sky-600 focus:ring-sky-500 rounded-sm"
-                                    />
-                                    <span className="ms-2 text-sm text-gray-600">Remember me</span>
-                                </label>
+                        {/*    <div className="flex items-center justify-between">*/}
+                        {/*        <label className="flex items-center">*/}
+                        {/*            <Checkbox*/}
+                        {/*                name="remember"*/}
+                        {/*                checked={data.remember}*/}
+                        {/*                onChange={(e) => setData('remember', e.target.checked)}*/}
+                        {/*                className="text-sky-600 focus:ring-sky-500 rounded-sm"*/}
+                        {/*            />*/}
+                        {/*            <span className="ms-2 text-sm text-gray-600">Remember me</span>*/}
+                        {/*        </label>*/}
 
-                                {canResetPassword && (
-                                    <Link
-                                        href={route('password.request')}
-                                        className="text-sm text-sky-600 hover:text-sky-700 font-medium"
-                                    >
-                                        Forgot password?
-                                    </Link>
-                                )}
-                            </div>
+                        {/*        {canResetPassword && (*/}
+                        {/*            <Link*/}
+                        {/*                href={route('password.request')}*/}
+                        {/*                className="text-sm text-sky-600 hover:text-sky-700 font-medium"*/}
+                        {/*            >*/}
+                        {/*                Forgot password?*/}
+                        {/*            </Link>*/}
+                        {/*        )}*/}
+                        {/*    </div>*/}
 
-                            <PrimaryButton
-                                className="w-full justify-center h-11 bg-gray-900 hover:bg-gray-800 active:bg-gray-900 focus:ring-offset-2 focus:ring-gray-900 rounded-sm"
-                                disabled={processing}
-                            >
-                                {processing ? 'Signing in...' : 'Sign in'}
-                            </PrimaryButton>
-                        </form>
+                        {/*    <PrimaryButton*/}
+                        {/*        className="w-full justify-center h-11 bg-gray-900 hover:bg-gray-800 active:bg-gray-900 focus:ring-offset-2 focus:ring-gray-900 rounded-sm"*/}
+                        {/*        disabled={processing}*/}
+                        {/*    >*/}
+                        {/*        {processing ? 'Signing in...' : 'Sign in'}*/}
+                        {/*    </PrimaryButton>*/}
+                        {/*</form>*/}
 
                         <p className="text-xs text-gray-500 text-center mt-4">
                             By signing in, you agree to our Terms and Privacy Policy
