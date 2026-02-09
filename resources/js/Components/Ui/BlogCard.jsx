@@ -62,7 +62,6 @@ export default function BlogCard({ post }) {
                 className="h-full bg-white rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden group cursor-pointer flex flex-col"
                 onClick={() => (window.location.href = route("blog.show", post))}
             >
-                <p>{post.featured_image}</p>
                 {/* Featured Image */}
                 <div className="relative h-48 overflow-hidden bg-gray-100">
                     {!imageError && post.featured_image ? (
