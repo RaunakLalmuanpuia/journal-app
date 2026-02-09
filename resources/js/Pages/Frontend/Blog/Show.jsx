@@ -233,6 +233,9 @@ export default function BlogShow({ post,seo, readTime }) {
 
     const { auth } = usePage().props;
 
+    const [showShareDropdown, setShowShareDropdown] = useState(false);
+    const [shareMessage, setShareMessage] = useState(null);
+
     // Main Comment Form (Root Level)
     const { data, setData, post: submitComment, processing, reset } = useForm({
         comment: '',
@@ -252,22 +255,69 @@ export default function BlogShow({ post,seo, readTime }) {
         });
     };
 
-    const handleShare = async () => {
-        if (navigator.share) {
+    const handleShare = async (platform = null) => {
+        const postUrl = window.location.href;
+        const encodedUrl = encodeURIComponent(postUrl);
+        const encodedTitle = encodeURIComponent(post.title);
+
+        // Native mobile share (only when clicking main Share button)
+        if (!platform && navigator.share) {
             try {
                 await navigator.share({
                     title: post.title,
                     text: post.description,
-                    url: window.location.href,
+                    url: postUrl,
                 });
+                return;
             } catch (err) {
-                console.log("Error sharing:", err);
+                console.log("Share cancelled");
             }
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert("Link copied to clipboard!");
         }
+
+        if (platform === "copy-link") {
+            await navigator.clipboard.writeText(postUrl);
+            setShareMessage("Link copied to clipboard!");
+            setTimeout(() => setShareMessage(null), 3000);
+            setShowShareDropdown(false);
+            return;
+        }
+
+        let shareUrl = "";
+
+        switch (platform) {
+            case "facebook":
+                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+                break;
+            case "twitter":
+                shareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+                break;
+            case "whatsapp":
+                shareUrl = `https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}`;
+                break;
+            case "linkedin":
+                shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+                break;
+            case "reddit":
+                shareUrl = `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`;
+                break;
+            case "instagram":
+                await navigator.clipboard.writeText(postUrl);
+                setShareMessage("Link copied! Paste it in Instagram bio or story.");
+                setTimeout(() => setShareMessage(null), 3000);
+                setShowShareDropdown(false);
+                return;
+            default:
+                // fallback copy
+                await navigator.clipboard.writeText(postUrl);
+                setShareMessage("Link copied to clipboard!");
+                setTimeout(() => setShareMessage(null), 3000);
+                return;
+        }
+
+        window.open(shareUrl, "_blank", "width=600,height=500");
+        setShowShareDropdown(false);
     };
+
 
     const contentBody = Array.isArray(post.body) ? post.body : [];
     const typographyClasses = `blog-content text-gray-800 leading-relaxed [&>h1]:text-4xl [&>h1]:font-bold [&>h1]:text-gray-900 [&>h1]:mb-6 [&>h1]:mt-8 [&>h2]:text-3xl [&>h2]:font-semibold [&>h2]:text-gray-900 [&>h2]:mb-5 [&>h2]:mt-7 [&>h3]:text-2xl [&>h3]:font-semibold [&>h3]:text-gray-900 [&>h3]:mb-4 [&>h3]:mt-6 [&>p]:mb-4 [&>p]:leading-relaxed [&>ul]:mb-4 [&>ul]:ml-6 [&>ul]:list-disc [&>ol]:mb-4 [&>ol]:ml-6 [&>ol]:list-decimal [&>li]:mb-2 [&>blockquote]:border-l-4 [&>blockquote]:border-blue-500 [&>blockquote]:bg-blue-50 [&>blockquote]:py-4 [&>blockquote]:px-6 [&>blockquote]:my-6 [&>blockquote]:italic [&>code]:bg-gray-100 [&>code]:px-2 [&>code]:py-1 [&>code]:rounded [&>code]:text-sm [&>code]:font-mono [&>pre]:bg-gray-900 [&>pre]:text-gray-100 [&>pre]:p-4 [&>pre]:rounded-lg [&>pre]:overflow-x-auto [&>pre]:my-6 [&>strong]:font-semibold [&>em]:italic [&>u]:underline`;
@@ -398,13 +448,61 @@ export default function BlogShow({ post,seo, readTime }) {
                             {post.total_likes || 0} {post.total_likes === 1 ? 'Like' : 'Likes'}
                         </button>
 
-                        <button
-                            onClick={handleShare}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                            <Share2 className="w-4 h-4 mr-2"/>
-                            Share
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowShareDropdown(!showShareDropdown)}
+                                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <Share2 className="w-4 h-4 mr-2" />
+                                Share
+                            </button>
+
+                            <AnimatePresence>
+                                {showShareDropdown && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setShowShareDropdown(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            className="absolute left-0 mt-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-[160px]"
+                                        >
+                                            {[
+                                                "facebook",
+                                                "twitter",
+                                                "whatsapp",
+                                                "linkedin",
+                                                "reddit",
+                                                "instagram",
+                                                "copy-link",
+                                            ].map((platform) => (
+                                                <button
+                                                    key={platform}
+                                                    onClick={() => handleShare(platform)}
+                                                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded capitalize"
+                                                >
+                                                    {platform.replace("-", " ")}
+                                                </button>
+                                            ))}
+
+                                        </motion.div>
+
+                                    </>
+                                )}
+
+                            </AnimatePresence>
+
+                        </div>
+
+                        {shareMessage && (
+                            <div className="mt-3 p-2 bg-green-50 text-green-700 text-xs rounded border border-green-100 text-center animate-pulse">
+                                {shareMessage}
+                            </div>
+                        )}
+
                     </motion.div>
 
                     <motion.div

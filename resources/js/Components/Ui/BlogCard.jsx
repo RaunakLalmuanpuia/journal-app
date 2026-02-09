@@ -38,18 +38,56 @@ export default function BlogCard({ post }) {
 
     const handleShare = async (platform) => {
         const postUrl = window.location.origin + route('blog.show', post);
+        const encodedUrl = encodeURIComponent(postUrl);
+        const encodedTitle = encodeURIComponent(post.title);
+
         if (platform === "copy-link") {
             await navigator.clipboard.writeText(postUrl);
             setShareMessage("Link copied to clipboard!");
             setTimeout(() => setShareMessage(null), 3000);
-        } else {
-            const shareUrl = platform === "facebook"
-                ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`
-                : `https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(post.title)}`;
-            window.open(shareUrl, "_blank", "width=600,height=400");
+            setShowShareDropdown(false);
+            return;
         }
+
+        let shareUrl = "";
+
+        switch (platform) {
+            case "facebook":
+                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+                break;
+
+            case "twitter":
+                shareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+                break;
+
+            case "whatsapp":
+                shareUrl = `https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}`;
+                break;
+
+            case "linkedin":
+                shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+                break;
+
+            case "reddit":
+                shareUrl = `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`;
+                break;
+
+            case "instagram":
+                // Instagram does NOT support direct web sharing of links
+                await navigator.clipboard.writeText(postUrl);
+                setShareMessage("Link copied! Paste it in Instagram bio or story.");
+                setTimeout(() => setShareMessage(null), 3000);
+                setShowShareDropdown(false);
+                return;
+
+            default:
+                return;
+        }
+
+        window.open(shareUrl, "_blank", "width=600,height=500");
         setShowShareDropdown(false);
     };
+
 
     const featuredImageUrl = useMemo(() => {
         if (!post.featured_image) return null;
@@ -212,7 +250,13 @@ export default function BlogCard({ post }) {
                                             exit={{ opacity: 0, scale: 0.95 }}
                                             className="absolute bottom-full left-0 mb-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-[140px]"
                                         >
-                                            {['facebook', 'twitter', 'copy-link'].map((platform) => (
+                                            {[ 'facebook',
+                                                'twitter',
+                                                'whatsapp',
+                                                'linkedin',
+                                                'reddit',
+                                                'instagram',
+                                                'copy-link'].map((platform) => (
                                                 <button
                                                     key={platform}
                                                     onClick={(e) => { e.stopPropagation(); handleShare(platform); }}
@@ -239,7 +283,7 @@ export default function BlogCard({ post }) {
 
                     {/* Toast-style Share Message */}
                     {shareMessage && (
-                        <div className="mt-2 p-2 bg-green-50 text-green-700 text-xs rounded border border-green-100 text-center animate-pulse">
+                        <div className="mt-3 p-2 bg-green-50 text-green-700 text-xs rounded border border-green-100 text-center animate-pulse">
                             {shareMessage}
                         </div>
                     )}
