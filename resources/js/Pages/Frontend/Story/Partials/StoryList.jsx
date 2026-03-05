@@ -22,7 +22,7 @@ export const StoryList = () => {
     const storyData = [
         {
             title: "Where It All Started",
-            content: `I give all credits to my father.
+            content: `I give credits to my father.
 
 My father has been writing a diary since the dawn of time, at least my time. He told me to do so too. Then I picked it up just before my teenage years. Writing my handwritten diaries for years to come in my life.
 
