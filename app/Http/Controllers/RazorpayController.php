@@ -8,6 +8,7 @@ use App\Models\Plan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Razorpay\Api\Api;
+use Illuminate\Support\Facades\DB;
 
 class RazorpayController extends Controller
 {
@@ -74,7 +75,6 @@ class RazorpayController extends Controller
             'razorpay_signature'  => 'required|string',
         ]);
 
-        // 1. Verify HMAC signature
         try {
             $this->api->utility->verifyPaymentSignature([
                 'razorpay_order_id'   => $request->razorpay_order_id,
@@ -88,31 +88,45 @@ class RazorpayController extends Controller
             return response()->json(['error' => 'Payment verification failed.'], 422);
         }
 
-        // 2. Mark payment paid
-        Payment::where('razorpay_order_id', $request->razorpay_order_id)
-            ->update([
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-                'razorpay_signature'  => $request->razorpay_signature,
+        // ✅ Atomic lock — webhook and verifyPayment can't both provision
+        $activated = $this->activateIfNotAlready(
+            $request->razorpay_order_id,
+            $request->razorpay_payment_id,
+            $request->razorpay_signature
+        );
+
+        // Already handled by webhook — just redirect, user is already provisioned
+        return response()->json(['redirect_url' => route('dashboard')]);
+    }
+
+    // RazorpayController.php - activateIfNotAlready()
+    private function activateIfNotAlready(string $orderId, string $paymentId, string $signature): bool
+    {
+        return DB::transaction(function () use ($orderId, $paymentId, $signature) {
+            $payment = Payment::where('razorpay_order_id', $orderId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$payment || $payment->status === 'paid') {
+                return false;
+            }
+
+            $payment->update([
+                'razorpay_payment_id' => $paymentId,
+                'razorpay_signature'  => $signature,
                 'status'              => 'paid',
             ]);
 
-        $user    = Auth::user();
-        $proPlan = Plan::where('type', 'pro')->firstOrFail();
+            $user    = $payment->user;
+            $proPlan = Plan::where('type', 'pro')->firstOrFail();
 
-        // 3. Activate Pro plan
-        $user->plans()->syncWithoutDetaching([
-            $proPlan->id => [
-                'status'    => 'active',
-                'starts_at' => now(),
-            ],
-        ]);
+            $user->plans()->syncWithoutDetaching([
+                $proPlan->id => ['status' => 'active', 'starts_at' => now()],
+            ]);
 
-        // 4. ✅ Dispatch provisioning directly — no Google OAuth redirect needed
-        // Tokens were already saved at login
-        ProvisionUserDrive::dispatch($user, $proPlan);
+            ProvisionUserDrive::dispatch($user, $proPlan);
 
-        return response()->json([
-            'redirect_url' => route('dashboard'),
-        ]);
+            return true;
+        });
     }
 }

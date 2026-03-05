@@ -17,6 +17,7 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\EnterpriseInquiryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\RazorpayController;
+use App\Http\Controllers\RazorpayWebhookController;
 
 
 
@@ -65,6 +66,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/razorpay/verify-payment', [RazorpayController::class, 'verifyPayment'])->name('razorpay.verify-payment');
 });
 
+Route::post('/razorpay/webhook', [RazorpayWebhookController::class, 'handle'])
+    ->name('razorpay.webhook')
+    ->middleware('throttle:60,1');
 
 Route::middleware('auth')->group(function () {
     Route::get('/pro/connect-drive', [GoogleDriveAuthController::class, 'redirect'])

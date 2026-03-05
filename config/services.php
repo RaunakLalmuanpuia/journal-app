@@ -48,8 +48,9 @@ return [
     'razorpay' => [
         'key_id'     => env('RAZORPAY_KEY_ID'),
         'key_secret' => env('RAZORPAY_KEY_SECRET'),
-        'amount'     => env('RAZORPAY_AMOUNT', 5),
+        'amount'     => env('RAZORPAY_AMOUNT', 500),
         'currency'   => env('RAZORPAY_CURRENCY', 'USD'),
+        'webhook_secret'  => env('RAZORPAY_WEBHOOK_SECRET'), // ✅ add this
     ],
 
 ];
