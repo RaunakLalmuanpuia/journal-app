@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import {
     ArrowRight,
     CheckCircle2,
@@ -65,9 +65,25 @@ const getFileConfig = (file) => {
     };
 };
 
+
+// Utility to load the Razorpay script
+const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+        // Don't add duplicate scripts
+        if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+            resolve(true);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload  = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
+};
 export default function User() {
     const { props } = usePage();
-    const { auth } = props;
+    const { auth, csrf_token } = props;
     const user = auth.user;
 
     // --- EXISTING STATE ---
@@ -77,6 +93,11 @@ export default function User() {
     // --- NEW STATE FOR FILE PREVIEW ---
     const [selectedFile, setSelectedFile] = useState(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
+
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [paymentError, setPaymentError]     = useState(null);
+
+
 
     // --- EXISTING LOGIC ---
     const hasPro = user.plans.some(p => p.type === 'pro' && p.pivot.status === 'active');
@@ -109,6 +130,72 @@ export default function User() {
     // Calculate config for Modal Header
     const modalFileConfig = selectedFile ? getFileConfig(selectedFile) : null;
     const ModalIcon = modalFileConfig ? modalFileConfig.Icon : null;
+
+
+    const handleActivatePro = async () => {
+        setPaymentLoading(true);
+        setPaymentError(null);
+
+        const sdkLoaded = await loadRazorpayScript();
+        if (!sdkLoaded) {
+            setPaymentError('Razorpay SDK failed to load. Please check your connection.');
+            setPaymentLoading(false);
+            return;
+        }
+
+        try {
+            // No headers needed — axios sends XSRF-TOKEN cookie automatically
+            const { data: order } = await axios.post('/razorpay/create-order');
+
+            const options = {
+                key:         order.key_id,
+                amount:      order.amount,
+                currency:    order.currency,
+                name:        'KeyTag Journal',
+                description: 'Upgrade to Pro Plan',
+                order_id:    order.order_id,
+                prefill:     { name: order.name, email: order.email },
+                theme:       { color: '#12b5e2' },
+
+                handler: async (response) => {
+                    try {
+                        const { data: result } = await axios.post('/razorpay/verify-payment', {
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id:   response.razorpay_order_id,
+                            razorpay_signature:  response.razorpay_signature,
+                        });
+
+                        window.location.href = result.redirect_url;
+
+                    } catch (err) {
+                        setPaymentError(
+                            err.response?.data?.error || 'Payment verification failed. Please contact support.'
+                        );
+                        setPaymentLoading(false);
+                    }
+                },
+
+                modal: {
+                    ondismiss: () => setPaymentLoading(false),
+                },
+            };
+
+            const rzp = new window.Razorpay(options);
+
+            rzp.on('payment.failed', (response) => {
+                setPaymentError(response.error.description || 'Payment failed. Please try again.');
+                setPaymentLoading(false);
+            });
+
+            rzp.open();
+
+        } catch (err) {
+            setPaymentError(
+                err.response?.data?.error || 'Could not initiate payment. Please try again.'
+            );
+            setPaymentLoading(false);
+        }
+    };
 
     return (
         <UserLayout>
@@ -260,9 +347,27 @@ export default function User() {
                                             <li className="flex items-start"><CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#12b5e2] mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" /><span>Advanced dashboards with richer weekly, monthly, and yearly insights</span></li>
                                         </ul>
                                         {!hasPro && (
-                                            <button className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors" onClick={() => window.location.href = route('pro.connect.drive')}>
-                                                Activate Pro
-                                            </button>
+                                            <div className="space-y-2">
+                                                {paymentError && (
+                                                    <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2">
+                                                        {paymentError}
+                                                    </p>
+                                                )}
+                                                <button
+                                                    onClick={handleActivatePro}
+                                                    disabled={paymentLoading}
+                                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[#12b5e2] hover:bg-[#0ea5d3] text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                >
+                                                    {paymentLoading ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                            Processing…
+                                                        </>
+                                                    ) : (
+                                                        'Activate Pro — $5'
+                                                    )}
+                                                </button>
+                                            </div>
                                         )}
                                         {hasPro && proFolder && (
                                             <div className="space-y-3">

@@ -11,17 +11,19 @@ class Payment extends Model
     protected $fillable = [
         'user_id',
         'plan_id',
+        'razorpay_order_id',
+        'razorpay_payment_id',
+        'razorpay_signature',
         'amount',
         'currency',
-        'gateway',
-        'transaction_id',
         'status',
-        'paid_at',
+        'razorpay_response',
     ];
 
+
     protected $casts = [
-        'paid_at' => 'datetime',
         'amount' => 'decimal:2',
+        'razorpay_response' => 'array',
     ];
 
     public function user() : BelongsTo

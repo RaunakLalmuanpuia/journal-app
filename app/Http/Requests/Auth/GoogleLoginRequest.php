@@ -74,7 +74,19 @@ class GoogleLoginRequest extends FormRequest
 //                    'token_expires_at' => now()->addSeconds($googleUser->expiresIn),
 //                ]
 //            );
-
+// ✅ Save Drive-scoped tokens from login — this powers provisioning later
+            $user->googleAccount()->updateOrCreate(
+                ['google_id' => $googleUser->getId()],
+                [
+                    'email'            => $googleUser->getEmail(),
+                    'access_token'     => $googleUser->token,
+                    // Only overwrite refresh_token if Google returned one
+                    // (it only returns it on first consent or after revocation)
+                    'refresh_token'    => $googleUser->refreshToken
+                        ?? $user->googleAccount?->refresh_token,
+                    'token_expires_at' => now()->addSeconds($googleUser->expiresIn ?? 3599),
+                ]
+            );
 
             // 4. Assign User Role
             if ($user->wasRecentlyCreated) {

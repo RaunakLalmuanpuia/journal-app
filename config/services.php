@@ -45,5 +45,11 @@ return [
         'bot_refresh_token' => env('GOOGLE_BOT_REFRESH_TOKEN'),
         'template_folder_id' => env('GOOGLE_TEMPLATE_FOLDER_ID'),
     ],
+    'razorpay' => [
+        'key_id'     => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+        'amount'     => env('RAZORPAY_AMOUNT', 5),
+        'currency'   => env('RAZORPAY_CURRENCY', 'USD'),
+    ],
 
 ];

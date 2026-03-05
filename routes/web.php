@@ -16,6 +16,8 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\EnterpriseInquiryController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\RazorpayController;
+
 
 
 
@@ -55,6 +57,13 @@ Route::middleware('auth')->group(function () {
 
 Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
+
+
+// KEEP: Razorpay
+Route::middleware('auth')->group(function () {
+    Route::post('/razorpay/create-order',   [RazorpayController::class, 'createOrder'])->name('razorpay.create-order');
+    Route::post('/razorpay/verify-payment', [RazorpayController::class, 'verifyPayment'])->name('razorpay.verify-payment');
+});
 
 
 Route::middleware('auth')->group(function () {
