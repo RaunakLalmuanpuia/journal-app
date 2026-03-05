@@ -23,7 +23,11 @@ export default function Home({ auth, laravelVersion, phpVersion }) {
 
                 {/* Hero / Introduction */}
                 <Intro />
+                {/* Data Visualization or Graphics */}
+                <Visualize />
 
+                {/* Video Presentation */}
+                <Video />
                 {/* Plans */}
                 <Plans />
 
@@ -31,13 +35,11 @@ export default function Home({ auth, laravelVersion, phpVersion }) {
                 <Process />
 
 
-                {/* Video Presentation */}
-                <Video />
 
 
 
-                {/* Data Visualization or Graphics */}
-                <Visualize />
+
+
 
                 <LatestBlogPosts/>
 
